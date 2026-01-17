@@ -151,8 +151,11 @@ class CIG_Database {
         ];
 
         foreach ($tables as $table) {
+            // Table names are constructed from $wpdb->prefix which is safe
+            // Using esc_sql for additional safety even though prefix is trusted
+            $safe_table = esc_sql($table);
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $wpdb->query("DROP TABLE IF EXISTS $table");
+            $wpdb->query("DROP TABLE IF EXISTS `{$safe_table}`");
         }
     }
 }

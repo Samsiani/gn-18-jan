@@ -304,8 +304,12 @@ class CIG_Stock_Manager {
 
         // Find all products that have reservations for this invoice
         // Search in _cig_reserved_stock meta for this invoice_id key
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $product_ids = $wpdb->get_col(
-            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_cig_reserved_stock'"
+            $wpdb->prepare(
+                "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s",
+                '_cig_reserved_stock'
+            )
         );
 
         if (empty($product_ids)) {

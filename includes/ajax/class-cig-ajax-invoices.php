@@ -203,11 +203,13 @@ class CIG_Ajax_Invoices {
         // Calculate two totals: real cash paid (excluding consignment) and consignment total
         $real_cash_paid = 0;
         $consignment_total = 0;
+        $has_consignment = false;
         foreach ($hist as $h) {
             $amount = floatval($h['amount'] ?? 0);
             $method = strtolower($h['method'] ?? '');
             if ($method === 'consignment') {
                 $consignment_total += $amount;
+                $has_consignment = true;
             } else {
                 $real_cash_paid += $amount;
             }
@@ -219,7 +221,16 @@ class CIG_Ajax_Invoices {
         // AUTO-STATUS LOGIC:
         // If real cash paid > 0 OR consignment exists, it's a Standard Sale (item left stock)
         // Only mark as fictive if no payments of any kind
-        $st = ($real_cash_paid > 0 || $consignment_total > 0) ? 'standard' : 'fictive';
+        $st = ($real_cash_paid > 0 || $has_consignment) ? 'standard' : 'fictive';
+        
+        // VIOLATION FIX: Block manual fictive setting if payments exist
+        // Check if user is trying to manually set invoice to fictive
+        $requested_status = sanitize_text_field($d['status'] ?? '');
+        if ($requested_status === 'fictive' && ($real_cash_paid > 0 || $has_consignment)) {
+            wp_send_json_error([
+                'message' => 'Cannot set invoice to fictive when payments exist. Remove all payments first.'
+            ], 400);
+        }
 
         // 2. Process Items & Enforce Item Statuses
         $items = array_filter((array)($d['items'] ?? []), function($r) { 
@@ -328,23 +339,57 @@ class CIG_Ajax_Invoices {
         // Save items and metadata (PostMeta - Legacy support)
         CIG_Invoice::save_meta($pid, $new_num, (array)($d['buyer'] ?? []), $items, $payment_data);
         
-        // Calculate total amount from items
+        // Calculate total amount and lifecycle status from items
         $total_amount = 0;
+        $count_sold = 0;
+        $count_reserved = 0;
+        $count_active_items = 0;
+        
         foreach ($items as $item) {
-            if (($item['status'] ?? '') !== 'canceled') {
+            $item_status = strtolower($item['status'] ?? 'none');
+            if ($item_status !== 'canceled' && $item_status !== 'none') {
+                $total_amount += floatval($item['total'] ?? (floatval($item['qty'] ?? 0) * floatval($item['price'] ?? 0)));
+                $count_active_items++;
+                if ($item_status === 'sold') {
+                    $count_sold++;
+                } elseif ($item_status === 'reserved') {
+                    $count_reserved++;
+                }
+            } elseif ($item_status === 'none') {
+                // For fictive invoices, still sum the total for display
                 $total_amount += floatval($item['total'] ?? (floatval($item['qty'] ?? 0) * floatval($item['price'] ?? 0)));
             }
         }
+        
+        // Calculate Lifecycle Status based on item statuses
+        // - completed: all items are 'sold'
+        // - reserved: all items are 'reserved'
+        // - unfinished: mixed statuses or no active items
+        $lifecycle_status = 'unfinished';
+        if ($st === 'fictive') {
+            // Fictive invoices are always unfinished
+            $lifecycle_status = 'unfinished';
+        } elseif ($count_active_items > 0) {
+            if ($count_sold === $count_active_items) {
+                $lifecycle_status = 'completed';
+            } elseif ($count_reserved === $count_active_items) {
+                $lifecycle_status = 'reserved';
+            }
+        }
+        
+        // Save lifecycle_status to postmeta (ensure consistency)
+        update_post_meta($pid, '_cig_lifecycle_status', $lifecycle_status);
 
         // --- PRIMARY STORAGE: Use CIG_Invoice_Manager for custom tables ---
         // Calculate sale_date based on latest payment date for 'standard' invoices
+        // If fictive, activation_date (sale_date) must be NULL
         $sale_date = $this->calculate_sale_date($st, $hist);
         
         $manager_data = [
             'invoice_number'   => $new_num,
             'customer_id'      => $customer_id,
             'status'           => $st,
-            'lifecycle_status' => 'unfinished',
+            'lifecycle_status' => $lifecycle_status,
             'total_amount'     => $total_amount,
             'paid_amount'      => $paid,
             'author_id'        => get_current_user_id(),
@@ -467,11 +512,12 @@ class CIG_Ajax_Invoices {
             'invoice_number'   => $data['invoice_number'],
             'customer_id'      => intval($data['customer_id']),
             'status'           => $status,
+            'lifecycle_status' => $data['lifecycle_status'],
             'total_amount'     => floatval($data['total_amount']),
             'paid_amount'      => floatval($data['paid_amount']),
             'general_note'     => $data['general_note']
         ];
-        $update_format = ['%s', '%d', '%s', '%f', '%f', '%s'];
+        $update_format = ['%s', '%d', '%s', '%s', '%f', '%f', '%s'];
 
         // Handle sold_date field
         if (isset($data['sold_date'])) {
@@ -479,9 +525,14 @@ class CIG_Ajax_Invoices {
             $update_format[] = '%s';
         }
 
-        // Date Logic: If status is becoming 'standard', calculate sale_date
-        // based on the latest payment date
-        if ($status === 'standard') {
+        // Date Logic for activation_date (sale_date):
+        // - If fictive: sale_date must be NULL
+        // - If standard: set sale_date based on latest payment date
+        if ($status === 'fictive') {
+            // Fictive invoices have no activation_date
+            $update_data['sale_date'] = null;
+            $update_format[] = '%s';
+        } elseif ($status === 'standard') {
             $old_status = $existing['status'] ?? 'fictive';
             $old_sale_date = $existing['sale_date'] ?? null;
 
@@ -704,9 +755,30 @@ class CIG_Ajax_Invoices {
         $id = intval($_POST['invoice_id']); 
         $nst = sanitize_text_field($_POST['status']);
         
-        $paid = floatval(get_post_meta($id, '_cig_payment_paid_amount', true));
-        if ($nst === 'fictive' && $paid > 0.001) {
-            wp_send_json_error(['message' => 'გადახდილი ვერ იქნება ფიქტიური']);
+        // Check for payments (both real cash and consignment)
+        $history = get_post_meta($id, '_cig_payment_history', true) ?: [];
+        $real_cash_paid = 0;
+        $has_consignment = false;
+        
+        if (is_array($history)) {
+            foreach ($history as $h) {
+                $amount = floatval($h['amount'] ?? 0);
+                $method = strtolower($h['method'] ?? '');
+                if ($amount > 0.001) {
+                    if ($method === 'consignment') {
+                        $has_consignment = true;
+                    } else {
+                        $real_cash_paid += $amount;
+                    }
+                }
+            }
+        }
+        
+        // Block switching to fictive if any payments exist
+        if ($nst === 'fictive' && ($real_cash_paid > 0.001 || $has_consignment)) {
+            wp_send_json_error([
+                'message' => 'Cannot set invoice to fictive when payments exist. Remove all payments first.'
+            ]);
         }
 
         $items = get_post_meta($id, '_cig_items', true) ?: [];
@@ -729,9 +801,13 @@ class CIG_Ajax_Invoices {
         $update_data = ['status' => $nst];
         $update_format = ['%s'];
         
-        // If activating (fictive -> standard), set sale_date
-        if ($ost === 'fictive' && $nst === 'standard') {
-            $history = get_post_meta($id, '_cig_payment_history', true) ?: [];
+        // Handle sale_date (activation_date) based on status
+        if ($nst === 'fictive') {
+            // Fictive invoices have no activation_date
+            $update_data['sale_date'] = null;
+            $update_format[] = '%s';
+        } elseif ($ost === 'fictive' && $nst === 'standard') {
+            // Activating (fictive -> standard), set sale_date
             $sale_date = $this->calculate_sale_date($nst, $history);
             $update_data['sale_date'] = $sale_date;
             $update_format[] = '%s';
@@ -754,14 +830,20 @@ class CIG_Ajax_Invoices {
         }
 
         // 4. Update Reservations / Stock
+        // When transitioning to fictive, pass empty new_items to purge all reservations
         $items_old = ($ost === 'fictive') ? [] : $items;
         $items_new = ($nst === 'fictive') ? [] : $items;
 
         $this->stock->update_invoice_reservations($id, $items_old, $items_new);
         
+        // Explicitly purge all reservations when transitioning to fictive
+        // This ensures cleanup even if old_items was empty
+        if ($nst === 'fictive' && $ost !== 'fictive') {
+            $this->stock->purge_invoice_reservations($id);
+        }
+        
         // 5. Force post update timestamp and date if activating
         if ($nst === 'standard' && $ost === 'fictive') {
-            $history = get_post_meta($id, '_cig_payment_history', true) ?: [];
             $this->force_update_invoice_date($id, $this->get_latest_payment_date($history));
         } else {
             wp_update_post([

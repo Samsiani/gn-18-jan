@@ -2,9 +2,13 @@
 /**
  * Database Schema Manager
  * Creates and manages custom tables for the CIG plugin
+ * 
+ * NOTE: This file is deprecated. Use CIG_DB_Installer instead.
+ * Keeping for backward compatibility.
  *
  * @package CIG
  * @since 4.0.0
+ * @deprecated Use CIG_DB_Installer class instead
  */
 
 if (!defined('ABSPATH')) {
@@ -15,75 +19,87 @@ class CIG_Database {
 
     /**
      * Create custom tables for the plugin
-     *
+     * 
+     * @deprecated Use CIG_DB_Installer::install() instead
      * @return void
      */
     public static function create_tables() {
+        // Delegate to CIG_DB_Installer for consistent schema
+        if (class_exists('CIG_DB_Installer')) {
+            CIG_DB_Installer::install();
+            return;
+        }
+
         global $wpdb;
         
         $charset_collate = $wpdb->get_charset_collate();
 
-        // Invoices Table
+        // Invoices Table - Updated to match CIG_DB_Installer schema
+        // Column mapping:
+        // - status column maps to _cig_invoice_status meta (values: standard/fictive)
+        // - lifecycle_status column maps to _cig_lifecycle_status meta (values: completed/reserved/unfinished)
+        // - sale_date is the activation_date (NULL for fictive, set for standard)
         $table_invoices = $wpdb->prefix . 'cig_invoices';
         $sql_invoices = "CREATE TABLE $table_invoices (
-            id bigint(20) NOT NULL,
+            id bigint(20) NOT NULL AUTO_INCREMENT,
             invoice_number varchar(50) NOT NULL,
-            type varchar(20) DEFAULT 'standard',
-            customer_name varchar(255) DEFAULT '',
-            customer_tax_id varchar(50) DEFAULT '',
-            total decimal(12,2) DEFAULT 0,
-            paid decimal(12,2) DEFAULT 0,
-            balance decimal(12,2) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            activation_date datetime DEFAULT NULL,
+            customer_id bigint(20) DEFAULT 0,
+            status varchar(20) DEFAULT 'fictive',
+            lifecycle_status varchar(20) DEFAULT 'unfinished',
+            total_amount decimal(10,2) DEFAULT 0.00,
+            paid_amount decimal(10,2) DEFAULT 0.00,
+            created_at datetime DEFAULT NULL,
+            sale_date datetime DEFAULT NULL,
             sold_date date DEFAULT NULL,
+            author_id bigint(20) DEFAULT 0,
+            general_note text,
+            is_rs_uploaded tinyint(1) DEFAULT 0,
             PRIMARY KEY  (id),
-            KEY invoice_number (invoice_number),
-            KEY type (type),
-            KEY activation_date (activation_date),
-            KEY sold_date (sold_date)
+            UNIQUE KEY invoice_number (invoice_number),
+            KEY status (status),
+            KEY lifecycle_status (lifecycle_status),
+            KEY sale_date (sale_date),
+            KEY sold_date (sold_date),
+            KEY customer_id (customer_id),
+            KEY author_id (author_id)
         ) $charset_collate;";
 
         // Invoice Items Table
         $table_items = $wpdb->prefix . 'cig_invoice_items';
         $sql_items = "CREATE TABLE $table_items (
             id bigint(20) NOT NULL AUTO_INCREMENT,
-            invoice_id bigint(20) NOT NULL,
+            invoice_id bigint(20) NOT NULL DEFAULT 0,
             product_id bigint(20) DEFAULT 0,
+            product_name varchar(255) DEFAULT '',
             sku varchar(100) DEFAULT '',
-            name varchar(255) NOT NULL,
-            brand varchar(100) DEFAULT '',
             description text,
-            image varchar(500) DEFAULT '',
-            qty decimal(10,2) DEFAULT 1,
-            price decimal(12,2) DEFAULT 0,
-            total decimal(12,2) DEFAULT 0,
-            warranty varchar(20) DEFAULT '',
+            quantity decimal(10,2) DEFAULT 0.00,
+            price decimal(10,2) DEFAULT 0.00,
+            total decimal(10,2) DEFAULT 0.00,
+            item_status varchar(20) DEFAULT 'none',
+            warranty_duration varchar(50) DEFAULT '',
             reservation_days int(11) DEFAULT 0,
-            status varchar(20) DEFAULT 'sold',
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            image varchar(500) DEFAULT '',
             PRIMARY KEY  (id),
             KEY invoice_id (invoice_id),
             KEY product_id (product_id),
-            KEY status (status)
+            KEY item_status (item_status)
         ) $charset_collate;";
 
         // Payments Table
         $table_payments = $wpdb->prefix . 'cig_payments';
         $sql_payments = "CREATE TABLE $table_payments (
             id bigint(20) NOT NULL AUTO_INCREMENT,
-            invoice_id bigint(20) NOT NULL,
-            date date NOT NULL,
-            amount decimal(12,2) DEFAULT 0,
-            payment_method varchar(50) DEFAULT 'other',
-            comment text,
+            invoice_id bigint(20) NOT NULL DEFAULT 0,
+            amount decimal(10,2) DEFAULT 0.00,
+            date datetime DEFAULT NULL,
+            method varchar(50) DEFAULT 'other',
             user_id bigint(20) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            comment text,
             PRIMARY KEY  (id),
             KEY invoice_id (invoice_id),
             KEY date (date),
-            KEY payment_method (payment_method)
+            KEY method (method)
         ) $charset_collate;";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -135,7 +151,11 @@ class CIG_Database {
         ];
 
         foreach ($tables as $table) {
-            $wpdb->query("DROP TABLE IF EXISTS $table");
+            // Table names are constructed from $wpdb->prefix which is safe
+            // Using esc_sql for additional safety even though prefix is trusted
+            $safe_table = esc_sql($table);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $wpdb->query("DROP TABLE IF EXISTS `{$safe_table}`");
         }
     }
 }

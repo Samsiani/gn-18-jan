@@ -301,17 +301,6 @@ class CIG_Ajax_Handler {
             if (isset($item['status']) && $item['status'] === 'reserved') {
                 $item['status'] = 'sold';
                 $item['reservation_days'] = 0;
-                
-                $prod_id = intval($item['product_id']);
-                $qty = floatval($item['qty']);
-                $product = wc_get_product($prod_id);
-                
-                if ($product && $product->managing_stock()) {
-                    $current_stock = $product->get_stock_quantity();
-                    $new_stock = max(0, $current_stock - $qty);
-                    $product->set_stock_quantity($new_stock);
-                    $product->save();
-                }
                 $has_change = true;
             }
             $updated_items[] = $item;

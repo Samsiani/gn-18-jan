@@ -287,6 +287,57 @@ class CIG_Stock_Manager {
         echo '<div style="padding:10px;background:#fff3cd;border:1px solid #ffc107;margin:10px 0;"><strong>Reserved:</strong> ' . sprintf('%s units', number_format($reserved, 0)) . '</div>';
     }
 
+    /**
+     * Purge all stock reservations for a specific invoice
+     * Used when transitioning an invoice to fictive status
+     *
+     * @param int $invoice_id Invoice ID to purge reservations for
+     * @return void
+     */
+    public function purge_invoice_reservations($invoice_id) {
+        global $wpdb;
+        
+        $invoice_id = (int) $invoice_id;
+        if ($invoice_id <= 0) {
+            return;
+        }
+
+        // Find all products that have reservations for this invoice
+        // Search in _cig_reserved_stock meta for this invoice_id key
+        $product_ids = $wpdb->get_col(
+            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_cig_reserved_stock'"
+        );
+
+        if (empty($product_ids)) {
+            return;
+        }
+
+        foreach ($product_ids as $product_id) {
+            $reserved_meta = get_post_meta($product_id, '_cig_reserved_stock', true);
+            
+            if (!is_array($reserved_meta) || !isset($reserved_meta[$invoice_id])) {
+                continue;
+            }
+
+            // Remove this invoice's reservation from the product
+            unset($reserved_meta[$invoice_id]);
+
+            // Update or delete the meta based on remaining reservations
+            if (empty($reserved_meta)) {
+                delete_post_meta($product_id, '_cig_reserved_stock');
+            } else {
+                update_post_meta($product_id, '_cig_reserved_stock', $reserved_meta);
+            }
+
+            if ($this->logger) {
+                $this->logger->info("Purged reservation for Product #{$product_id}", [
+                    'invoice' => $invoice_id,
+                    'reason' => 'Invoice transitioned to fictive'
+                ]);
+            }
+        }
+    }
+
     public function check_expired_reservations() {
         global $wpdb;
         $product_ids = $wpdb->get_col("SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_cig_reserved_stock'");

@@ -205,8 +205,13 @@ class CIG_Invoice_Manager {
             $update_format[]          = '%s';
         }
 
-        // Date Logic: If status changes from 'fictive' to 'standard', set sale_date to CURRENT_TIME
-        if ($old_status === 'fictive' && $new_status === 'standard') {
+        // Date Logic for activation_date (sale_date):
+        // - If transitioning to fictive: sale_date must be NULL
+        // - If transitioning from fictive to standard: set sale_date to CURRENT_TIME
+        if ($new_status === 'fictive' && $old_status !== 'fictive') {
+            $update_data['sale_date'] = null;
+            $update_format[]          = '%s';
+        } elseif ($old_status === 'fictive' && $new_status === 'standard') {
             $update_data['sale_date'] = current_time('mysql');
             $update_format[]          = '%s';
         }

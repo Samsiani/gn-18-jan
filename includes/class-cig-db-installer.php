@@ -103,6 +103,7 @@ class CIG_DB_Installer {
             PRIMARY KEY  (id),
             UNIQUE KEY invoice_number (invoice_number),
             KEY status (status),
+            KEY lifecycle_status (lifecycle_status),
             KEY sale_date (sale_date),
             KEY sold_date (sold_date),
             KEY customer_id (customer_id),

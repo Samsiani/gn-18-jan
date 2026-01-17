@@ -321,8 +321,9 @@ class CIG_Invoice_Manager {
             )
         );
 
-        // Sync stock after marking as sold
-        $this->sync_stock($invoice_id);
+        // Note: Stock sync is NOT performed here to prevent double deduction.
+        // Stock adjustments are handled exclusively by CIG_Stock_Manager::update_invoice_reservations()
+        // which is called from CIG_Ajax_Invoices::mark_as_sold() after this method completes.
 
         return true;
     }

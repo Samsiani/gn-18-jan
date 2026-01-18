@@ -200,7 +200,7 @@ class CIG_Ajax_Products {
         $sort_col = isset($_POST['sort']) ? sanitize_text_field($_POST['sort']) : 'title';
         $sort_dir = isset($_POST['order']) && strtolower($_POST['order']) === 'desc' ? 'DESC' : 'ASC';
 
-        $args = ['post_type' => ['product', 'product_variation'], 'post_status' => 'publish', 'posts_per_page' => $per_page, 'paged' => $page, 'fields' => 'ids', 'meta_query' => [['key' => '_stock_status', 'value' => 'outofstock', 'compare' => '!=']]];
+        $args = ['post_type' => ['product', 'product_variation'], 'post_status' => 'publish', 'posts_per_page' => $per_page, 'paged' => $page, 'fields' => 'ids'];
 
         $filter_handler = function($clauses) use ($search) {
             global $wpdb;

@@ -206,11 +206,11 @@ class CIG_Ajax_Dashboard {
                 ['relation' => 'OR', ['key' => '_cig_invoice_status', 'value' => 'standard', 'compare' => '='], ['key' => '_cig_invoice_status', 'compare' => 'NOT EXISTS']],
                 // Ensure total > 0
                 ['key' => '_cig_invoice_total', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'],
-                // --- UPDATE: Only show invoices where all items are SOLD ---
+                // --- UPDATE: Show invoices where lifecycle is completed OR reserved ---
                 [
                     'key'     => '_cig_lifecycle_status',
-                    'value'   => 'completed',
-                    'compare' => '='
+                    'value'   => ['completed', 'reserved'],
+                    'compare' => 'IN'
                 ]
             ]
         ];

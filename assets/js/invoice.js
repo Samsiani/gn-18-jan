@@ -78,11 +78,11 @@ jQuery(function ($) {
               '<td class="col-n">' + rowNum + '</td>' +
               '<td class="col-name">' +
                   '<input type="text" class="product-search" data-product-id="' + (item.id||0) + '" data-sku="' + (item.sku||'') + '" value="' + (item.name||'') + '">' +
-                  '<div class="name-sub"><span class="name-sku-label">Code:</span> <span class="name-sku-value">' + (item.sku||'—') + '</span></div>' +
+                  '<div class="name-sub"><span class="name-sku-label">' + (cigAjax.i18n?.code_label || 'Code:') + '</span> <span class="name-sku-value">' + (item.sku||'—') + '</span></div>' +
               '</td>' +
               '<td class="col-image">' +
                   '<img class="product-image" src="' + img + '">' +
-                  '<select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">6 Months</option><option value="1y">1 Year</option><option value="2y">2 Years</option><option value="3y">3 Years</option></select>' +
+                  '<select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">' + (cigAjax.i18n?.warranty_6m || '6 Months') + '</option><option value="1y">' + (cigAjax.i18n?.warranty_1y || '1 Year') + '</option><option value="2y">' + (cigAjax.i18n?.warranty_2y || '2 Years') + '</option><option value="3y">' + (cigAjax.i18n?.warranty_3y || '3 Years') + '</option></select>' +
               '</td>' +
               '<td class="col-brand"><input type="text" class="product-brand" readonly value="' + (item.brand||'') + '"></td>' +
               '<td class="col-desc"><textarea class="product-desc">' + (item.desc||'') + '</textarea></td>' +
@@ -97,9 +97,9 @@ jQuery(function ($) {
               '<td class="col-status no-print">' +
                   '<select class="product-status">' +
                       '<option value="none">---</option>' +
-                      '<option value="sold">Sold</option>' +
-                      '<option value="reserved">Reserved</option>' +
-                      '<option value="canceled">Canceled</option>' +
+                      '<option value="sold">' + (cigAjax.i18n?.sold || 'Sold') + '</option>' +
+                      '<option value="reserved">' + (cigAjax.i18n?.reserved || 'Reserved') + '</option>' +
+                      '<option value="canceled">' + (cigAjax.i18n?.canceled || 'Canceled') + '</option>' +
                   '</select>' +
                   '<input type="number" class="reservation-days" min="1" max="90" value="' + defaultReservationDays + '" style="width:60px;margin-top:3px;display:none;">' +
               '</td>' +
@@ -381,8 +381,8 @@ jQuery(function ($) {
         var img = it.image || cigAjax.placeholder_img; var phClass = it.image ? '' : 'cig-placeholder-img';
         
         var $row = $('<tr><td class="col-n">'+(i+1)+'</td>' +
-          '<td class="col-name"><input type="text" class="product-search" data-product-id="'+(it.product_id||0)+'" data-sku="'+(it.sku||'')+'" value="'+(it.name||'')+'"><div class="name-sub"><span class="name-sku-label">Code:</span> <span class="name-sku-value">'+(it.sku||'—')+'</span></div></td>' +
-          '<td class="col-image"><img class="product-image '+phClass+'" src="'+img+'"><select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">6 Months</option><option value="1y">1 Year</option><option value="2y">2 Years</option><option value="3y">3 Years</option></select></td>' +
+          '<td class="col-name"><input type="text" class="product-search" data-product-id="'+(it.product_id||0)+'" data-sku="'+(it.sku||'')+'" value="'+(it.name||'')+'"><div class="name-sub"><span class="name-sku-label">' + (cigAjax.i18n?.code_label || 'Code:') + '</span> <span class="name-sku-value">'+(it.sku||'—')+'</span></div></td>' +
+          '<td class="col-image"><img class="product-image '+phClass+'" src="'+img+'"><select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">' + (cigAjax.i18n?.warranty_6m || '6 Months') + '</option><option value="1y">' + (cigAjax.i18n?.warranty_1y || '1 Year') + '</option><option value="2y">' + (cigAjax.i18n?.warranty_2y || '2 Years') + '</option><option value="3y">' + (cigAjax.i18n?.warranty_3y || '3 Years') + '</option></select></td>' +
           '<td class="col-brand"><input type="text" class="product-brand" readonly value="'+(it.brand||'')+'"></td>' +
           '<td class="col-desc"><textarea class="product-desc">'+(it.desc||'')+'</textarea></td>' +
           '<td class="col-qty"><div class="quantity-wrapper"><input type="number" class="quantity" min="1" value="'+(it.qty||1)+'"><div class="qty-btn-group"><button type="button" class="qty-btn qty-increase">▲</button><button type="button" class="qty-btn qty-decrease">▼</button></div></div></td>' +
@@ -391,9 +391,9 @@ jQuery(function ($) {
           '<td class="col-status no-print">' +
             '<select class="product-status">' +
                 '<option value="none">---</option>' +
-                '<option value="sold">Sold</option>' +
-                '<option value="reserved">Reserved</option>' +
-                '<option value="canceled">Canceled</option>' +
+                '<option value="sold">' + (cigAjax.i18n?.sold || 'Sold') + '</option>' +
+                '<option value="reserved">' + (cigAjax.i18n?.reserved || 'Reserved') + '</option>' +
+                '<option value="canceled">' + (cigAjax.i18n?.canceled || 'Canceled') + '</option>' +
             '</select>' +
             '<input type="number" class="reservation-days" min="1" max="90" value="'+resDays+'" style="width:60px;margin-top:3px;display:'+(st==='reserved'?'block':'none')+'"></td>' +
           '<td class="col-actions no-print"><button type="button" class="btn-remove-row">X</button></td></tr>');

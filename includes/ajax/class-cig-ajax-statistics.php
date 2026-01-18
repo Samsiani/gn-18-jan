@@ -66,6 +66,28 @@ class CIG_Ajax_Statistics {
     }
 
     /**
+     * Get the appropriate date column for filtering based on invoice status.
+     * Fictive invoices use created_at (since sale_date is NULL), 
+     * while standard invoices use sale_date.
+     *
+     * Note: Column names cannot be parameterized in SQL prepared statements,
+     * so we use a whitelist approach for security. The returned value is
+     * guaranteed to be one of the whitelisted column names.
+     *
+     * @param string $status The invoice status ('fictive', 'standard', 'all', etc.)
+     * @return string The whitelisted date column name with table alias
+     */
+    private function get_date_column_for_status($status) {
+        // Whitelist of allowed column names for security - only these exact values can be returned
+        $allowed_columns = [
+            'fictive' => 'i.created_at',
+            'default' => 'i.sale_date'
+        ];
+        
+        return ($status === 'fictive') ? $allowed_columns['fictive'] : $allowed_columns['default'];
+    }
+
+    /**
      * Get statistics summary using raw SQL on custom tables
      * 
      * Revenue Calculation: Sum total_amount from cig_invoices WHERE sale_date is within range
@@ -115,13 +137,14 @@ class CIG_Ajax_Statistics {
             $where_revenue = "WHERE (i.status = 'standard' OR i.status IS NULL)";
         }
         
-        // Filter by sale_date (NOT created_at)
+        // Filter by date: use created_at for fictive invoices, sale_date for standard
+        $date_column = $this->get_date_column_for_status($status);
         if ($date_from) { 
-            $where_revenue .= " AND i.sale_date >= %s"; 
+            $where_revenue .= " AND {$date_column} >= %s"; 
             $params_revenue[] = $date_from . ' 00:00:00'; 
         }
         if ($date_to) { 
-            $where_revenue .= " AND i.sale_date <= %s"; 
+            $where_revenue .= " AND {$date_column} <= %s"; 
             $params_revenue[] = $date_to . ' 23:59:59'; 
         }
 
@@ -213,12 +236,14 @@ class CIG_Ajax_Statistics {
             $where_items .= " AND (i.status = 'standard' OR i.status IS NULL)";
         }
         
+        // Filter by date: use created_at for fictive invoices, sale_date for standard
+        $date_column = $this->get_date_column_for_status($status);
         if ($date_from) { 
-            $where_items .= " AND i.sale_date >= %s"; 
+            $where_items .= " AND {$date_column} >= %s"; 
             $params_items[] = $date_from . ' 00:00:00'; 
         }
         if ($date_to) { 
-            $where_items .= " AND i.sale_date <= %s"; 
+            $where_items .= " AND {$date_column} <= %s"; 
             $params_items[] = $date_to . ' 23:59:59'; 
         }
 
@@ -610,13 +635,17 @@ class CIG_Ajax_Statistics {
                 ORDER BY i.sale_date DESC
                 LIMIT " . self::MAX_DRILL_DOWN_RESULTS;
         } else {
-            // GENERAL OVERVIEW / RESERVED INVOICES: Filter by sale_date
+            // GENERAL OVERVIEW / RESERVED INVOICES / FICTIVE: Filter by appropriate date column
+            // For fictive invoices, use created_at; for standard invoices, use sale_date
+            $date_column = $this->get_date_column_for_status($status);
+            $order_column = $this->get_date_column_for_status($status);
+            
             if ($date_from) { 
-                $where .= " AND i.sale_date >= %s"; 
+                $where .= " AND {$date_column} >= %s"; 
                 $params[] = $date_from . ' 00:00:00'; 
             }
             if ($date_to) { 
-                $where .= " AND i.sale_date <= %s"; 
+                $where .= " AND {$date_column} <= %s"; 
                 $params[] = $date_to . ' 23:59:59'; 
             }
 
@@ -628,12 +657,13 @@ class CIG_Ajax_Statistics {
                 i.paid_amount,
                 i.status,
                 i.sale_date,
+                i.created_at,
                 i.author_id,
                 c.name as customer_name
                 FROM {$this->table_invoices} i
                 LEFT JOIN {$this->table_customers} c ON i.customer_id = c.id
                 {$where}
-                ORDER BY i.sale_date DESC
+                ORDER BY {$order_column} DESC
                 LIMIT " . self::MAX_DRILL_DOWN_RESULTS;
         }
 
@@ -748,7 +778,10 @@ class CIG_Ajax_Statistics {
                 'paid_breakdown' => $bd,
                 'due' => max(0, $tot - $pd),
                 'author' => $author_name,
-                'date' => $inv['sale_date'] ? substr($inv['sale_date'], 0, 16) : '',
+                // For fictive invoices, use created_at; for standard, use sale_date
+                'date' => ($inv['status'] === 'fictive') 
+                    ? (isset($inv['created_at']) && $inv['created_at'] ? substr($inv['created_at'], 0, 16) : '')
+                    : ($inv['sale_date'] ? substr($inv['sale_date'], 0, 16) : ''),
                 'status' => $inv['status'],
                 'view_url' => get_permalink($id),
                 'edit_url' => add_query_arg('edit', '1', get_permalink($id))

@@ -578,13 +578,23 @@ class CIG_Core {
         $invoice_page_url = home_url('/invoice-shortcode/'); 
         ?>
         <div id="cig-stock-cart-bar" class="cig-stock-cart-bar" style="display:none;">
-            <div class="cig-cart-info">
-                <span class="dashicons dashicons-cart"></span>
-                <span id="cig-cart-count">0</span> <?php esc_html_e('products selected', 'cig'); ?>
+            <div class="cig-cart-main">
+                <div class="cig-cart-info">
+                    <span class="dashicons dashicons-cart"></span>
+                    <span id="cig-cart-count">0</span> <?php esc_html_e('products selected', 'cig'); ?>
+                </div>
+                <button type="button" id="cig-cart-toggle" class="cig-cart-toggle">
+                    <span class="dashicons dashicons-arrow-up-alt2"></span>
+                </button>
+                <a href="<?php echo esc_url($invoice_page_url); ?>" id="cig-create-invoice-btn" class="cig-create-invoice-btn">
+                    <?php esc_html_e('Create Invoice', 'cig'); ?> <span class="dashicons dashicons-arrow-right-alt2"></span>
+                </a>
             </div>
-            <a href="<?php echo esc_url($invoice_page_url); ?>" id="cig-create-invoice-btn" class="cig-create-invoice-btn">
-                <?php esc_html_e('Create Invoice', 'cig'); ?> <span class="dashicons dashicons-arrow-right-alt2"></span>
-            </a>
+            <div class="cig-cart-list-wrapper" style="display:none;">
+                <div class="cig-cart-list" id="cig-cart-list">
+                    <!-- Cart items will be rendered here dynamically -->
+                </div>
+            </div>
         </div>
         <?php
     }

@@ -318,7 +318,34 @@
   color: #fff;
 }
 
-/* Floating Cart Bar */
+/* Out of Stock Styles */
+.cig-oos-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
+.cig-oos-icon .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #ccc;
+}
+
+.cig-product-oos {
+  color: #dc3545 !important;
+}
+
+/* --- CART ACCORDION STYLES --- */
+
+@keyframes slideUp {
+  from { transform: translate(-50%, 20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* Main container updates for accordion */
 .cig-stock-cart-bar {
   position: fixed;
   bottom: 20px;
@@ -326,19 +353,21 @@
   transform: translateX(-50%);
   background: #333;
   color: #fff;
-  padding: 12px 25px;
-  border-radius: 50px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
   z-index: 9999;
+  max-width: 450px;
+  width: 90%;
   animation: slideUp 0.3s ease;
 }
 
-@keyframes slideUp {
-  from { transform: translate(-50%, 20px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
+.cig-cart-main {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 20px;
 }
 
 .cig-cart-info {
@@ -380,6 +409,151 @@
   color: #fff;
 }
 
+/* Toggle Button */
+.cig-cart-toggle {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.cig-cart-toggle:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.cig-cart-toggle .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  transition: transform 0.2s ease;
+}
+
+.cig-cart-toggle.expanded .dashicons {
+  transform: rotate(180deg);
+}
+
+/* Cart List Wrapper (Accordion) */
+.cig-cart-list-wrapper {
+  background: #2a2a2a;
+  border-top: 1px solid #444;
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 0 0 12px 12px;
+}
+
+.cig-cart-list {
+  padding: 10px;
+}
+
+/* Individual Cart Item */
+.cig-cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: #3a3a3a;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: background 0.2s ease;
+}
+
+.cig-cart-item:last-child {
+  margin-bottom: 0;
+}
+
+.cig-cart-item:hover {
+  background: #444;
+}
+
+.cig-cart-item-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #555;
+  flex-shrink: 0;
+}
+
+.cig-cart-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cig-cart-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cig-cart-item-price {
+  font-size: 12px;
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.cig-cart-item-remove {
+  background: rgba(220, 53, 69, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cig-cart-item-remove:hover {
+  background: #dc3545;
+}
+
+.cig-cart-item-remove .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #dc3545;
+  transition: color 0.2s ease;
+}
+
+.cig-cart-item-remove:hover .dashicons {
+  color: #fff;
+}
+
+/* Scrollbar styling for cart list */
+.cig-cart-list-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cig-cart-list-wrapper::-webkit-scrollbar-track {
+  background: #2a2a2a;
+  border-radius: 3px;
+}
+
+.cig-cart-list-wrapper::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.cig-cart-list-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
 /* Responsive */
 @media (max-width: 1200px) { .cig-products-stock-table-wrapper { margin: 20px 10px; } }
 @media (max-width: 768px) { 
@@ -399,5 +573,12 @@
   .arrow-up, .arrow-down { font-size: 7px; height: 5px; } 
   
   /* Mobile Cart Bar */
-  .cig-stock-cart-bar { width: 90%; justify-content: space-between; border-radius: 10px; bottom: 10px; padding: 10px 15px; }
+  .cig-stock-cart-bar { width: 95%; max-width: none; border-radius: 10px; bottom: 10px; }
+  .cig-cart-main { padding: 10px 15px; gap: 10px; }
+  .cig-cart-info { font-size: 13px; }
+  .cig-create-invoice-btn { padding: 6px 12px; font-size: 12px; }
+  .cig-cart-list-wrapper { max-height: 200px; }
+  .cig-cart-item { padding: 8px; gap: 8px; }
+  .cig-cart-item-thumb { width: 35px; height: 35px; }
+  .cig-cart-item-name { font-size: 12px; }
 }

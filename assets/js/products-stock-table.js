@@ -20,6 +20,31 @@ jQuery(function($) {
             $bar.fadeIn(200).css('display', 'flex');
         } else {
             $bar.fadeOut(200);
+            // Hide accordion when cart is empty
+            $('.cig-cart-list-wrapper').slideUp(200);
+            $('#cig-cart-toggle').removeClass('expanded');
+        }
+
+        // Render cart items list
+        var $listContainer = $('#cig-cart-list');
+        $listContainer.empty();
+        
+        if (cart.length > 0) {
+            cart.forEach(function(item) {
+                var imgSrc = item.image || cigStockTable.placeholder_img || '';
+                var itemName = item.name || '';
+                var itemHtml = '<div class="cig-cart-item" data-id="' + item.id + '">' +
+                    '<img class="cig-cart-item-thumb" src="' + escapeHtml(imgSrc) + '" alt="' + escapeHtml(itemName) + '">' +
+                    '<div class="cig-cart-item-info">' +
+                        '<span class="cig-cart-item-name">' + escapeHtml(itemName) + '</span>' +
+                        '<span class="cig-cart-item-price">' + parseFloat(item.price || 0).toFixed(2) + ' ₾</span>' +
+                    '</div>' +
+                    '<button type="button" class="cig-cart-item-remove" data-id="' + item.id + '" title="Remove">' +
+                        '<span class="dashicons dashicons-no-alt"></span>' +
+                    '</button>' +
+                '</div>';
+                $listContainer.append(itemHtml);
+            });
         }
 
         // Sync buttons state
@@ -100,6 +125,29 @@ jQuery(function($) {
     });
 
     initCart();
+
+    // Handle cart accordion toggle
+    $(document).on('click', '#cig-cart-toggle', function(e) {
+        e.preventDefault();
+        var $wrapper = $('.cig-cart-list-wrapper');
+        var $toggle = $(this);
+        
+        if ($wrapper.is(':visible')) {
+            $wrapper.slideUp(200);
+            $toggle.removeClass('expanded');
+        } else {
+            $wrapper.slideDown(200);
+            $toggle.addClass('expanded');
+        }
+    });
+
+    // Handle remove item from cart accordion
+    $(document).on('click', '.cig-cart-item-remove', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var id = $(this).data('id');
+        removeFromCart(id);
+    });
 
     // --- 2. STOCK TABLE LOGIC ---
     if ($('#cig-stock-table').length) {
@@ -195,23 +243,34 @@ jQuery(function($) {
                 var btnClass = inCart ? 'cig-add-btn added' : 'cig-add-btn';
                 var btnIcon = inCart ? '<span class="dashicons dashicons-yes"></span>' : '<span class="dashicons dashicons-plus"></span>';
                 
-                var actionBtn = '<button type="button" class="' + btnClass + '" ' +
-                    'data-id="' + product.id + '" ' +
-                    'data-sku="' + escapeHtml(product.sku) + '" ' +
-                    'data-title="' + escapeHtml(product.title) + '" ' +
-                    'data-price="' + (product.price_num || 0) + '" ' +
-                    'data-image="' + (product.image || '') + '" ' +
-                    'data-brand="' + (product.brand || '') + '" ' + 
-                    'data-desc="' + (product.desc || '') + '">' + 
-                    btnIcon + '</button>';
+                // Check if product is out of stock (stock_num !== -1 means stock is managed, and <= 0 means out of stock)
+                var isOutOfStock = (product.stock_num !== -1 && product.stock_num <= 0);
+                
+                var actionBtn;
+                if (isOutOfStock) {
+                    // Render disabled/forbidden icon for out-of-stock items
+                    actionBtn = '<span class="cig-oos-icon" title="Out of Stock"><span class="dashicons dashicons-lock"></span></span>';
+                } else {
+                    actionBtn = '<button type="button" class="' + btnClass + '" ' +
+                        'data-id="' + product.id + '" ' +
+                        'data-sku="' + escapeHtml(product.sku) + '" ' +
+                        'data-title="' + escapeHtml(product.title) + '" ' +
+                        'data-price="' + (product.price_num || 0) + '" ' +
+                        'data-image="' + (product.image || '') + '" ' +
+                        'data-brand="' + (product.brand || '') + '" ' + 
+                        'data-desc="' + (product.desc || '') + '">' + 
+                        btnIcon + '</button>';
+                }
 
                 // --- Visual indicator for out of stock products ---
                 var titleColor = 'inherit';
-                if (product.stock_num !== -1 && product.stock_num <= 0) {
+                var titleClass = '';
+                if (isOutOfStock) {
                     titleColor = '#dc3545';
+                    titleClass = 'cig-product-oos';
                 }
 
-                var titleHtml = '<a href="' + product.product_url + '" target="_blank" style="font-weight:600;color:' + titleColor + ';text-decoration:none;">' + escapeHtml(product.title) + ' <span class="dashicons dashicons-external" style="font-size:12px;color:#999;"></span></a>';
+                var titleHtml = '<a href="' + product.product_url + '" target="_blank" class="' + titleClass + '" style="font-weight:600;color:' + titleColor + ';text-decoration:none;">' + escapeHtml(product.title) + ' <span class="dashicons dashicons-external" style="font-size:12px;color:#999;"></span></a>';
                 
                 // --- INSERT DIMENSIONS HERE (FIX) ---
                 if (product.dimensions && typeof product.dimensions === 'string' && product.dimensions !== '') {

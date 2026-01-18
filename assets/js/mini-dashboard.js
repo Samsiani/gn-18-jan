@@ -84,9 +84,9 @@ jQuery(function ($) {
         }
       },
       error: function() {
-        $('#cig-mini-stat-invoices .cig-mini-stat-value').html('<span style="color:#dc3545;">Error</span>');
-        $('#cig-mini-stat-last .cig-mini-stat-value').html('<span style="color:#dc3545;">Error</span>');
-        $('#cig-mini-stat-reserved .cig-mini-stat-value').html('<span style="color:#dc3545;">Error</span>');
+        $('#cig-mini-stat-invoices .cig-mini-stat-value').html('<span style="color:#dc3545;">' + (cigAjax.i18n?.error || 'Error') + '</span>');
+        $('#cig-mini-stat-last .cig-mini-stat-value').html('<span style="color:#dc3545;">' + (cigAjax.i18n?.error || 'Error') + '</span>');
+        $('#cig-mini-stat-reserved .cig-mini-stat-value').html('<span style="color:#dc3545;">' + (cigAjax.i18n?.error || 'Error') + '</span>');
       }
     });
   }
@@ -99,10 +99,10 @@ jQuery(function ($) {
       var date = new Date(stats.last_invoice_date.replace(' ', 'T'));
       var today = new Date();
       var isToday = date.toDateString() === today.toDateString();
-      var displayDate = isToday ? 'Today' : formatDate(stats.last_invoice_date);
+      var displayDate = isToday ? (cigAjax.i18n?.today || 'Today') : formatDate(stats.last_invoice_date);
       $('#cig-mini-stat-last .cig-mini-stat-value').text(displayDate);
     } else {
-      $('#cig-mini-stat-last .cig-mini-stat-value').text('Never');
+      $('#cig-mini-stat-last .cig-mini-stat-value').text(cigAjax.i18n?.never || 'Never');
     }
     
     $('#cig-mini-stat-reserved .cig-mini-stat-value').text(stats.total_reserved || 0);
@@ -164,7 +164,7 @@ jQuery(function ($) {
   // Load my invoices
   function loadMyInvoices() {
     // Note: colspan is 7 because we have 7 columns in TH
-    $('#cig-mini-invoices-tbody').html('<tr class="cig-mini-loading-row"><td colspan="7"><div class="cig-mini-loading"><div class="cig-mini-spinner"></div><p>Loading invoices...</p></div></td></tr>');
+    $('#cig-mini-invoices-tbody').html('<tr class="cig-mini-loading-row"><td colspan="7"><div class="cig-mini-loading"><div class="cig-mini-spinner"></div><p>' + (cigAjax.i18n?.loading_invoices || 'Loading invoices...') + '</p></div></td></tr>');
 
     $.ajax({
       url: cigAjax.ajax_url,
@@ -181,11 +181,11 @@ jQuery(function ($) {
         if (res && res.success && res.data) {
           renderInvoices(res.data.invoices);
         } else {
-          $('#cig-mini-invoices-tbody').html('<tr><td colspan="7" class="cig-mini-no-results">No invoices found</td></tr>');
+          $('#cig-mini-invoices-tbody').html('<tr><td colspan="7" class="cig-mini-no-results">' + (cigAjax.i18n?.no_invoices_found || 'No invoices found') + '</td></tr>');
         }
       },
       error: function() {
-        $('#cig-mini-invoices-tbody').html('<tr><td colspan="7" class="cig-mini-no-results" style="color:#dc3545;">Error loading invoices</td></tr>');
+        $('#cig-mini-invoices-tbody').html('<tr><td colspan="7" class="cig-mini-no-results" style="color:#dc3545;">' + (cigAjax.i18n?.error_loading_invoices || 'Error loading invoices') + '</td></tr>');
       }
     });
   }
@@ -193,16 +193,16 @@ jQuery(function ($) {
   // Render invoices
   function renderInvoices(invoices) {
     if (!invoices || invoices.length === 0) {
-      $('#cig-mini-invoices-tbody').html('<tr><td colspan="7" class="cig-mini-no-results">No invoices found</td></tr>');
+      $('#cig-mini-invoices-tbody').html('<tr><td colspan="7" class="cig-mini-no-results">' + (cigAjax.i18n?.no_invoices_found || 'No invoices found') + '</td></tr>');
       return;
     }
 
     var html = '';
     invoices.forEach(function(invoice) {
       var statusIcons = '';
-      if (invoice.has_sold) statusIcons += '<span class="cig-status-icon status-sold" title="Sold">✓</span>';
-      if (invoice.has_reserved) statusIcons += '<span class="cig-status-icon status-reserved" title="Reserved">⏳</span>';
-      if (invoice.has_canceled) statusIcons += '<span class="cig-status-icon status-canceled" title="Canceled">✗</span>';
+      if (invoice.has_sold) statusIcons += '<span class="cig-status-icon status-sold" title="' + (cigAjax.i18n?.sold || 'Sold') + '">✓</span>';
+      if (invoice.has_reserved) statusIcons += '<span class="cig-status-icon status-reserved" title="' + (cigAjax.i18n?.reserved || 'Reserved') + '">⏳</span>';
+      if (invoice.has_canceled) statusIcons += '<span class="cig-status-icon status-canceled" title="' + (cigAjax.i18n?.canceled || 'Canceled') + '">✗</span>';
 
       var paymentClass = 'payment-' + invoice.payment_type;
       
@@ -231,8 +231,8 @@ jQuery(function ($) {
       html += '<td><div class="cig-mini-status-icons">' + statusIcons + '</div></td>';
       // Column 7: Actions
       html += '<td><div class="cig-mini-actions">';
-      html += '<a href="' + invoice.view_url + '" class="cig-mini-action-btn cig-mini-btn-view" target="_blank">View</a>';
-      html += '<a href="' + invoice.edit_url + '" class="cig-mini-action-btn cig-mini-btn-edit">Edit</a>';
+      html += '<a href="' + invoice.view_url + '" class="cig-mini-action-btn cig-mini-btn-view" target="_blank">' + (cigAjax.i18n?.view || 'View') + '</a>';
+      html += '<a href="' + invoice.edit_url + '" class="cig-mini-action-btn cig-mini-btn-edit">' + (cigAjax.i18n?.edit || 'Edit') + '</a>';
       html += '</div></td>';
       html += '</tr>';
     });
@@ -243,14 +243,16 @@ jQuery(function ($) {
   // Render expiring list
   function renderExpiringList() {
     if (expiringData.length === 0) {
-      $('#cig-expiring-list').html('<div class="cig-mini-no-results">No reservations expiring soon</div>');
+      $('#cig-expiring-list').html('<div class="cig-mini-no-results">' + (cigAjax.i18n?.no_reservations_expiring || 'No reservations expiring soon') + '</div>');
       return;
     }
 
     var html = '';
     expiringData.forEach(function(item) {
       var urgencyClass = item.days_left <= 1 ? 'urgency-high' : 'urgency-medium';
-      var urgencyText = item.days_left === 1 ? '1 day left' : item.days_left + ' days left';
+      var urgencyText = item.days_left === 1 
+          ? (cigAjax.i18n?.day_left || '1 day left') 
+          : (cigAjax.i18n?.days_left || '%d days left').replace('%d', item.days_left);
 
       html += '<div class="cig-expiring-item">';
       html += '<div class="cig-expiring-header">';

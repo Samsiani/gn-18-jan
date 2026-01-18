@@ -39,7 +39,7 @@ jQuery(function($) {
                         '<span class="cig-cart-item-name">' + escapeHtml(itemName) + '</span>' +
                         '<span class="cig-cart-item-price">' + parseFloat(item.price || 0).toFixed(2) + ' ₾</span>' +
                     '</div>' +
-                    '<button type="button" class="cig-cart-item-remove" data-id="' + item.id + '" title="Remove">' +
+                    '<button type="button" class="cig-cart-item-remove" data-id="' + item.id + '" title="' + (cigStockTable.i18n?.remove || 'Remove') + '">' +
                         '<span class="dashicons dashicons-no-alt"></span>' +
                     '</button>' +
                 '</div>';
@@ -78,7 +78,7 @@ jQuery(function($) {
                     // Revert on error
                     cart = cart.filter(function(item) { return item.id != productData.id; });
                     updateCartUI();
-                    alert('Error saving to cart');
+                    alert(cigStockTable.i18n?.error_saving_cart || 'Error saving to cart');
                 }
             });
         }
@@ -192,7 +192,7 @@ jQuery(function($) {
                     }
                 },
                 error: function () {
-                    $('#cig-stock-tbody').html('<tr class="no-results-row"><td colspan="8" style="text-align:center;color:#dc3545;">Error loading data.</td></tr>');
+                    $('#cig-stock-tbody').html('<tr class="no-results-row"><td colspan="8" style="text-align:center;color:#dc3545;">' + (cigStockTable.i18n?.error_loading_data || 'Error loading data.') + '</td></tr>');
                 }
             });
         }
@@ -217,7 +217,7 @@ jQuery(function($) {
 
                 var imageHtml = product.image 
                     ? '<img src="' + product.image + '" alt="" class="cig-product-thumb" data-full="' + product.full_image + '">' 
-                    : '<div class="cig-no-image">No Image</div>';
+                    : '<div class="cig-no-image">' + (cigStockTable.i18n?.no_image || 'No Image') + '</div>';
 
                 var availClass = (product.available_num > 0) ? 'available-value' : 'out-of-stock';
                 if (product.available_num === -1) availClass = '';
@@ -249,7 +249,7 @@ jQuery(function($) {
                 var actionBtn;
                 if (isOutOfStock) {
                     // Render disabled/forbidden icon for out-of-stock items
-                    actionBtn = '<span class="cig-oos-icon" title="Out of Stock"><span class="dashicons dashicons-lock"></span></span>';
+                    actionBtn = '<span class="cig-oos-icon" title="' + (cigStockTable.i18n?.out_of_stock || 'Out of Stock') + '"><span class="dashicons dashicons-lock"></span></span>';
                 } else {
                     actionBtn = '<button type="button" class="' + btnClass + '" ' +
                         'data-id="' + product.id + '" ' +
@@ -304,7 +304,13 @@ jQuery(function($) {
 
         function updateResultsInfo(p, per, tot) {
             var s = (p-1)*per+1, e = Math.min(p*per, tot);
-            $('#cig-stock-info').text(tot > 0 ? 'Showing ' + s + '-' + e + ' of ' + tot + ' products' : '');
+            if (tot > 0) {
+                var showingText = (cigStockTable.i18n?.showing_results || 'Showing %1$s-%2$s of %3$s products')
+                    .replace('%1$s', s).replace('%2$s', e).replace('%3$s', tot);
+                $('#cig-stock-info').text(showingText);
+            } else {
+                $('#cig-stock-info').text('');
+            }
         }
 
         function bindTableEvents() {
@@ -377,15 +383,15 @@ jQuery(function($) {
             $.post(cigStockTable.ajax_url, data, function(res) {
                 $input.prop('disabled',false); $td.find('.cig-action-btn').prop('disabled',false);
                 if(res.success) {
-                    showToast(res.data.message || 'Saved', 'success');
+                    showToast(res.data.message || cigStockTable.i18n?.saved || 'Saved', 'success');
                     $td.removeClass('cig-cell-editing');
                     loadProducts(currentPage);
                 } else {
-                    showToast(res.data.message || 'Error', 'error');
+                    showToast(res.data.message || cigStockTable.i18n?.error || 'Error', 'error');
                 }
             }, 'json').fail(function() {
                 $input.prop('disabled',false); $td.find('.cig-action-btn').prop('disabled',false);
-                showToast('Server error', 'error');
+                showToast(cigStockTable.i18n?.server_error || 'Server error', 'error');
             });
         }
     }

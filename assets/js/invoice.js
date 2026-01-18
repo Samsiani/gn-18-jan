@@ -78,11 +78,11 @@ jQuery(function ($) {
               '<td class="col-n">' + rowNum + '</td>' +
               '<td class="col-name">' +
                   '<input type="text" class="product-search" data-product-id="' + (item.id||0) + '" data-sku="' + (item.sku||'') + '" value="' + (item.name||'') + '">' +
-                  '<div class="name-sub"><span class="name-sku-label">Code:</span> <span class="name-sku-value">' + (item.sku||'—') + '</span></div>' +
+                  '<div class="name-sub"><span class="name-sku-label">' + (cigAjax.i18n?.code_label || 'Code:') + '</span> <span class="name-sku-value">' + (item.sku||'—') + '</span></div>' +
               '</td>' +
               '<td class="col-image">' +
                   '<img class="product-image" src="' + img + '">' +
-                  '<select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">6 Months</option><option value="1y">1 Year</option><option value="2y">2 Years</option><option value="3y">3 Years</option></select>' +
+                  '<select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">' + (cigAjax.i18n?.warranty_6m || '6 Months') + '</option><option value="1y">' + (cigAjax.i18n?.warranty_1y || '1 Year') + '</option><option value="2y">' + (cigAjax.i18n?.warranty_2y || '2 Years') + '</option><option value="3y">' + (cigAjax.i18n?.warranty_3y || '3 Years') + '</option></select>' +
               '</td>' +
               '<td class="col-brand"><input type="text" class="product-brand" readonly value="' + (item.brand||'') + '"></td>' +
               '<td class="col-desc"><textarea class="product-desc">' + (item.desc||'') + '</textarea></td>' +
@@ -97,9 +97,9 @@ jQuery(function ($) {
               '<td class="col-status no-print">' +
                   '<select class="product-status">' +
                       '<option value="none">---</option>' +
-                      '<option value="sold">Sold</option>' +
-                      '<option value="reserved">Reserved</option>' +
-                      '<option value="canceled">Canceled</option>' +
+                      '<option value="sold">' + (cigAjax.i18n?.sold || 'Sold') + '</option>' +
+                      '<option value="reserved">' + (cigAjax.i18n?.reserved || 'Reserved') + '</option>' +
+                      '<option value="canceled">' + (cigAjax.i18n?.canceled || 'Canceled') + '</option>' +
                   '</select>' +
                   '<input type="number" class="reservation-days" min="1" max="90" value="' + defaultReservationDays + '" style="width:60px;margin-top:3px;display:none;">' +
               '</td>' +
@@ -206,7 +206,7 @@ jQuery(function ($) {
               var rowHtml = '<tr><td style="padding:10px; border-bottom:1px solid #eee; color:#555;">' + (pay.date || '-') + '</td><td style="padding:10px; border-bottom:1px solid #eee; color:#555;">' + (methodLabel || '-') + '</td><td style="padding:10px; border-bottom:1px solid #eee; text-align:right; font-weight:bold; color:#333;">' + amount.toFixed(2) + ' ₾</td><td style="padding:10px; border-bottom:1px solid #eee; text-align:center;">' + (!isReadOnly ? '<span class="dashicons dashicons-trash btn-delete-payment" data-index="' + index + '" style="color:#dc3545; cursor:pointer; font-size:16px; opacity:0.7;" title="წაშლა"></span>' : '') + '</td></tr>';
               $tbody.append(rowHtml);
           });
-      } else { $tbody.html('<tr><td colspan="4" style="text-align:center; padding:15px; color:#999; font-style:italic;">გადახდები არ არის დაფიქსირებული</td></tr>'); }
+      } else { $tbody.html('<tr><td colspan="4" style="text-align:center; padding:15px; color:#999; font-style:italic;">' + (cigAjax.i18n?.no_payments_recorded || 'No payments recorded') + '</td></tr>'); }
 
       var remaining = grandTotal - totalPaid;
       if (Math.abs(remaining) < 0.01) remaining = 0;
@@ -218,7 +218,7 @@ jQuery(function ($) {
       if (cashTotal > 0) {
           $('#disp-paid-row').show();
           $('#disp-paid-total').text(cashTotal.toFixed(2) + ' ₾');
-          $('#disp-paid-label').text('გადახდილია:');
+          $('#disp-paid-label').text(cigAjax.i18n?.paid_label || 'Paid:');
       } else {
           $('#disp-paid-row').hide();
       }
@@ -238,7 +238,7 @@ jQuery(function ($) {
       } else if (remaining < -0.01) {
           // Overpaid scenario
           $('#disp-remaining-row').show();
-          $('#disp-remaining').css('color', '#dc3545').text(remaining.toFixed(2) + ' ₾ (ზედმეტი)');
+          $('#disp-remaining').css('color', '#dc3545').text(remaining.toFixed(2) + ' ₾ (' + (cigAjax.i18n?.overpaid || 'overpaid') + ')');
       } else {
           // Remaining is 0 or covered by payments - hide remaining row
           $('#disp-remaining-row').hide();
@@ -250,8 +250,8 @@ jQuery(function ($) {
       var amount = parseFloat($('#new-pay-amount').val());
       var date = $('#new-pay-date').val();
       var method = $('#new-pay-method').val();
-      if (isNaN(amount) || amount <= 0) { alert('გთხოვთ მიუთითოთ სწორი თანხა (0-ზე მეტი).'); return; }
-      if (!date) { alert('გთხოვთ მიუთითოთ თარიღი.'); return; }
+      if (isNaN(amount) || amount <= 0) { alert(cigAjax.i18n?.enter_valid_amount || 'Please enter a valid amount (greater than 0).'); return; }
+      if (!date) { alert(cigAjax.i18n?.enter_date || 'Please enter a date.'); return; }
       paymentHistory.push({ date: date, amount: amount, method: method, user_id: cigAjax.current_user || 0 });
       $('#new-pay-amount').val('');
       renderPaymentHistory();
@@ -263,14 +263,14 @@ jQuery(function ($) {
       var currentPaid = 0;
       paymentHistory.forEach(function(p) { currentPaid += parseFloat(p.amount); });
       var remaining = grandTotal - currentPaid;
-      if (remaining <= 0.01) { alert('ინვოისი უკვე სრულად არის გადახდილი.'); return; }
+      if (remaining <= 0.01) { alert(cigAjax.i18n?.invoice_fully_paid || 'Invoice is already fully paid.'); return; }
       $('#new-pay-amount').val(remaining.toFixed(2));
       $('#new-pay-date').val(cigAjax.site_date);
   });
 
   $(document).on('click', '.btn-delete-payment', function() {
       if (isReadOnly) return;
-      if(!confirm('ნამდვილად გსურთ ამ ჩანაწერის წაშლა?')) return;
+      if(!confirm(cigAjax.i18n?.confirm_delete_payment || 'Are you sure you want to delete this record?')) return;
       paymentHistory.splice($(this).data('index'), 1);
       renderPaymentHistory();
   });
@@ -381,8 +381,8 @@ jQuery(function ($) {
         var img = it.image || cigAjax.placeholder_img; var phClass = it.image ? '' : 'cig-placeholder-img';
         
         var $row = $('<tr><td class="col-n">'+(i+1)+'</td>' +
-          '<td class="col-name"><input type="text" class="product-search" data-product-id="'+(it.product_id||0)+'" data-sku="'+(it.sku||'')+'" value="'+(it.name||'')+'"><div class="name-sub"><span class="name-sku-label">Code:</span> <span class="name-sku-value">'+(it.sku||'—')+'</span></div></td>' +
-          '<td class="col-image"><img class="product-image '+phClass+'" src="'+img+'"><select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">6 Months</option><option value="1y">1 Year</option><option value="2y">2 Years</option><option value="3y">3 Years</option></select></td>' +
+          '<td class="col-name"><input type="text" class="product-search" data-product-id="'+(it.product_id||0)+'" data-sku="'+(it.sku||'')+'" value="'+(it.name||'')+'"><div class="name-sub"><span class="name-sku-label">' + (cigAjax.i18n?.code_label || 'Code:') + '</span> <span class="name-sku-value">'+(it.sku||'—')+'</span></div></td>' +
+          '<td class="col-image"><img class="product-image '+phClass+'" src="'+img+'"><select class="warranty-period" style="width:100%;margin-top:5px;font-size:10px;"><option value="">---</option><option value="6m">' + (cigAjax.i18n?.warranty_6m || '6 Months') + '</option><option value="1y">' + (cigAjax.i18n?.warranty_1y || '1 Year') + '</option><option value="2y">' + (cigAjax.i18n?.warranty_2y || '2 Years') + '</option><option value="3y">' + (cigAjax.i18n?.warranty_3y || '3 Years') + '</option></select></td>' +
           '<td class="col-brand"><input type="text" class="product-brand" readonly value="'+(it.brand||'')+'"></td>' +
           '<td class="col-desc"><textarea class="product-desc">'+(it.desc||'')+'</textarea></td>' +
           '<td class="col-qty"><div class="quantity-wrapper"><input type="number" class="quantity" min="1" value="'+(it.qty||1)+'"><div class="qty-btn-group"><button type="button" class="qty-btn qty-increase">▲</button><button type="button" class="qty-btn qty-decrease">▼</button></div></div></td>' +
@@ -391,9 +391,9 @@ jQuery(function ($) {
           '<td class="col-status no-print">' +
             '<select class="product-status">' +
                 '<option value="none">---</option>' +
-                '<option value="sold">Sold</option>' +
-                '<option value="reserved">Reserved</option>' +
-                '<option value="canceled">Canceled</option>' +
+                '<option value="sold">' + (cigAjax.i18n?.sold || 'Sold') + '</option>' +
+                '<option value="reserved">' + (cigAjax.i18n?.reserved || 'Reserved') + '</option>' +
+                '<option value="canceled">' + (cigAjax.i18n?.canceled || 'Canceled') + '</option>' +
             '</select>' +
             '<input type="number" class="reservation-days" min="1" max="90" value="'+resDays+'" style="width:60px;margin-top:3px;display:'+(st==='reserved'?'block':'none')+'"></td>' +
           '<td class="col-actions no-print"><button type="button" class="btn-remove-row">X</button></td></tr>');
@@ -407,7 +407,7 @@ jQuery(function ($) {
 
     if (cigAjax.payment && Array.isArray(cigAjax.payment.history)) { paymentHistory = cigAjax.payment.history; }
     renderPaymentHistory();
-    $('#btn-save-invoice').text('Update Invoice');
+    $('#btn-save-invoice').text(cigAjax.i18n?.update_invoice || 'Update Invoice');
   }
 
   /* Build Payload (AUTO STATUS LOGIC) */
@@ -503,26 +503,26 @@ jQuery(function ($) {
   }
 
   $(document).on('click', '#btn-save-invoice', function () {
-    if (isReadOnly) { alert('This invoice is locked.'); return; }
+    if (isReadOnly) { alert(cigAjax.i18n?.invoice_locked || 'This invoice is locked.'); return; }
     
     var payload = buildPayload();
 
     // Validation
     var errors = [];
-    if (!payload.buyer.name) errors.push('მყიდველის სახელი (Buyer Name)');
-    if (!payload.buyer.tax_id) errors.push('საიდენტიფიკაციო კოდი (Tax ID)');
-    if (!payload.buyer.phone) errors.push('ტელეფონი (Phone)');
+    if (!payload.buyer.name) errors.push(cigAjax.i18n?.buyer_name || 'Buyer Name');
+    if (!payload.buyer.tax_id) errors.push(cigAjax.i18n?.tax_id || 'Tax ID');
+    if (!payload.buyer.phone) errors.push(cigAjax.i18n?.phone || 'Phone');
 
     if (errors.length > 0) {
-        alert('გთხოვთ შეავსოთ სავალდებულო ველები:\n\n- ' + errors.join('\n- '));
+        alert((cigAjax.i18n?.fill_required_fields || 'Please fill in the required fields:') + '\n\n- ' + errors.join('\n- '));
         return;
     }
 
     if (!payload.items.length) { alert(cigAjax.i18n.empty_items); return; }
     
-    if (payload.status === 'standard' && $('.stock-error').length > 0 && !confirm('Stock warnings present. Proceed?')) return;
+    if (payload.status === 'standard' && $('.stock-error').length > 0 && !confirm(cigAjax.i18n?.stock_warnings_proceed || 'Stock warnings present. Proceed?')) return;
 
-    var $btn = $(this).prop('disabled', true).text('Saving...');
+    var $btn = $(this).prop('disabled', true).text(cigAjax.i18n?.saving || 'Saving...');
     var action = editMode ? 'cig_update_invoice' : 'cig_save_invoice';
 
     $.post(cigAjax.ajax_url, { action: action, nonce: cigAjax.nonce, payload: JSON.stringify(payload) }, function(res) {
@@ -532,27 +532,27 @@ jQuery(function ($) {
                 action: 'cig_clear_cart_db',
                 nonce: cigAjax.nonce
             });
-            alert(editMode ? 'Updated successfully.' : 'Saved successfully.');
+            alert(editMode ? (cigAjax.i18n?.updated_successfully || 'Updated successfully.') : (cigAjax.i18n?.saved_successfully || 'Saved successfully.'));
             window.location.href = res.data.view_url;
         } else {
-            alert('Error: ' + (res.data.message || 'Save failed'));
-            $btn.prop('disabled', false).text(editMode ? 'Update Invoice' : 'Save Invoice');
+            alert('Error: ' + (res.data.message || cigAjax.i18n?.save_failed || 'Save failed'));
+            $btn.prop('disabled', false).text(editMode ? (cigAjax.i18n?.update_invoice || 'Update Invoice') : (cigAjax.i18n?.save_invoice || 'Save Invoice'));
         }
-    }).fail(function() { alert('Server Error'); $btn.prop('disabled', false).text(editMode ? 'Update Invoice' : 'Save Invoice'); });
+    }).fail(function() { alert(cigAjax.i18n?.server_error || 'Server Error'); $btn.prop('disabled', false).text(editMode ? (cigAjax.i18n?.update_invoice || 'Update Invoice') : (cigAjax.i18n?.save_invoice || 'Save Invoice')); });
   });
   
   $(document).on('click', '#cig-mark-sold', function(e) {
       e.preventDefault();
-      if(!confirm('ნამდვილად გსურთ დარეზერვებული პროდუქტების გაყიდულად მონიშვნა?')) return;
-      var $btn = $(this); $btn.prop('disabled', true).text('Processing...');
+      if(!confirm(cigAjax.i18n?.confirm_mark_sold || 'Are you sure you want to mark reserved products as sold?')) return;
+      var $btn = $(this); $btn.prop('disabled', true).text(cigAjax.i18n?.processing || 'Processing...');
       $.ajax({
           url: cigAjax.ajax_url, method: 'POST',
           data: { action: 'cig_mark_as_sold', nonce: cigAjax.nonce, invoice_id: invoiceId },
           success: function(res) {
               if(res.success) { alert(res.data.message); location.reload(); } 
-              else { alert(res.data.message); $btn.prop('disabled', false).text('Mark as Sold'); }
+              else { alert(res.data.message); $btn.prop('disabled', false).text(cigAjax.i18n?.mark_as_sold || 'Mark as Sold'); }
           },
-          error: function() { alert('Connection error'); $btn.prop('disabled', false).text('Mark as Sold'); }
+          error: function() { alert(cigAjax.i18n?.connection_error || 'Connection error'); $btn.prop('disabled', false).text(cigAjax.i18n?.mark_as_sold || 'Mark as Sold'); }
       });
   });
 

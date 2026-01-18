@@ -59,7 +59,7 @@ jQuery(function($) {
             // ყოველი ჩატვირთვის წინ ვამოწმებთ ღილაკის სტატუსს
             checkResetVisibility(); 
 
-            $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;padding:30px;"><div class="cig-loading-spinner" style="display:inline-block; border:3px solid #f3f3f3; border-top:3px solid #50529d; border-radius:50%; width:20px; height:20px; animation:spin 1s linear infinite; vertical-align:middle; margin-right:10px;"></div> Loading...</td></tr>');
+            $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;padding:30px;"><div class="cig-loading-spinner" style="display:inline-block; border:3px solid #f3f3f3; border-top:3px solid #50529d; border-radius:50%; width:20px; height:20px; animation:spin 1s linear infinite; vertical-align:middle; margin-right:10px;"></div> ' + (cigAjax.i18n?.loading || 'Loading...') + '</td></tr>');
 
             $.ajax({
                 url: cigAjax.ajax_url, 
@@ -81,12 +81,12 @@ jQuery(function($) {
                         renderPagination(res.data.current_page, res.data.total_pages);
                         accCurrentPage = res.data.current_page;
                     } else {
-                        $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;padding:20px;">No invoices found.</td></tr>');
+                        $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;padding:20px;">' + (cigAjax.i18n?.no_invoices_found || 'No invoices found.') + '</td></tr>');
                         $('#cig-acc-pagination').empty();
                     }
                 },
                 error: function() {
-                    $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;color:#dc3545;padding:20px;">Error loading data.</td></tr>');
+                    $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;color:#dc3545;padding:20px;">' + (cigAjax.i18n?.error_loading_data || 'Error loading data.') + '</td></tr>');
                 }
             });
         }
@@ -94,7 +94,7 @@ jQuery(function($) {
         // --- Render Table ---
         function renderAccountantTable(invoices) {
             if (!invoices || invoices.length === 0) {
-                $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;padding:20px;">No invoices found.</td></tr>');
+                $('#cig-acc-tbody').html('<tr><td colspan="12" style="text-align:center;padding:20px;">' + (cigAjax.i18n?.no_invoices_found || 'No invoices found.') + '</td></tr>');
                 return;
             }
 
@@ -123,7 +123,7 @@ jQuery(function($) {
                 if (inv.payment_desc) colPay += '<div style="font-size:10px; color:#777; margin-top:2px;">' + inv.payment_desc + '</div>';
 
                 var colTotal = '<strong style="font-size:13px;">' + inv.total + '</strong>';
-                if (inv.is_partial) colTotal += '<div style="font-size:9px;color:#e0a800;font-weight:bold;text-transform:uppercase;">(Partial)</div>';
+                if (inv.is_partial) colTotal += '<div style="font-size:9px;color:#e0a800;font-weight:bold;text-transform:uppercase;">(' + (cigAjax.i18n?.partial || 'Partial') + ')</div>';
 
                 var btnAttrs = 'data-id="' + inv.id + '" ' + 
                                'data-num="' + inv.number + '" ' + 
@@ -132,14 +132,14 @@ jQuery(function($) {
 
                 var noteIcons = [];
                 if (inv.consultant_note) {
-                    noteIcons.push('<span class="dashicons dashicons-admin-users cig-note-icon cig-view-note" ' + btnAttrs + ' title="View Consultant Note" style="color:#50529d;"></span>');
+                    noteIcons.push('<span class="dashicons dashicons-admin-users cig-note-icon cig-view-note" ' + btnAttrs + ' title="' + (cigAjax.i18n?.view_consultant_note || 'View Consultant Note') + '" style="color:#50529d;"></span>');
                 }
                 if (inv.acc_note) {
-                    noteIcons.push('<span class="dashicons dashicons-format-chat cig-note-icon cig-view-note" ' + btnAttrs + ' title="View Accountant Note" style="color:#28a745;"></span>');
+                    noteIcons.push('<span class="dashicons dashicons-format-chat cig-note-icon cig-view-note" ' + btnAttrs + ' title="' + (cigAjax.i18n?.view_accountant_note || 'View Accountant Note') + '" style="color:#28a745;"></span>');
                 }
                 var colNote = noteIcons.length > 0 ? '<div class="cig-note-wrapper">' + noteIcons.join('') + '</div>' : '<span style="color:#eee;">—</span>';
 
-                var colAct = '<button type="button" class="cig-edit-note" ' + btnAttrs + ' style="background:none; border:none; cursor:pointer; color:#777;" title="Edit Note"><span class="dashicons dashicons-admin-generic" style="font-size:18px;"></span></button>';
+                var colAct = '<button type="button" class="cig-edit-note" ' + btnAttrs + ' style="background:none; border:none; cursor:pointer; color:#777;" title="' + (cigAjax.i18n?.edit_note || 'Edit Note') + '"><span class="dashicons dashicons-admin-generic" style="font-size:18px;"></span></button>';
 
                 html += '<tr>';
                 html += '<td>' + colInv + '</td>';
@@ -162,9 +162,10 @@ jQuery(function($) {
         function renderPagination(current, total) {
             var $pag = $('#cig-acc-pagination'); $pag.empty(); 
             if (total <= 1) return;
-            if (current > 1) $pag.append('<button class="cig-acc-page-btn" data-page="' + (current - 1) + '">« Prev</button>');
-            $pag.append('<span style="font-size:13px;color:#555;padding:0 10px;">Page ' + current + ' of ' + total + '</span>');
-            if (current < total) $pag.append('<button class="cig-acc-page-btn" data-page="' + (current + 1) + '">Next »</button>');
+            if (current > 1) $pag.append('<button class="cig-acc-page-btn" data-page="' + (current - 1) + '">« ' + (cigAjax.i18n?.prev || 'Prev') + '</button>');
+            var pageText = (cigAjax.i18n?.page_of || 'Page %1$s of %2$s').replace('%1$s', current).replace('%2$s', total);
+            $pag.append('<span style="font-size:13px;color:#555;padding:0 10px;">' + pageText + '</span>');
+            if (current < total) $pag.append('<button class="cig-acc-page-btn" data-page="' + (current + 1) + '">' + (cigAjax.i18n?.next || 'Next') + ' »</button>');
         }
 
         // --- 3. Filter Events & Adaptive Logic ---
@@ -341,7 +342,7 @@ jQuery(function($) {
                 },
                 success: function(res) {},
                 error: function() {
-                    alert('Error updating status');
+                    alert(cigAjax.i18n?.error_updating_status || 'Error updating status');
                     $chk.prop('checked', !pendingTargetState);
                 }
             });
@@ -366,7 +367,7 @@ jQuery(function($) {
             if (cNote && cNote.trim() !== '') {
                 $cDisplay.text(cNote).css({'color':'#333', 'font-style':'normal'});
             } else {
-                $cDisplay.text('(კონსულტანტის კომენტარი არ არის / No note)').css({'color':'#999', 'font-style':'italic'});
+                $cDisplay.text(cigAjax.i18n?.no_consultant_note || '(No consultant note)').css({'color':'#999', 'font-style':'italic'});
             }
             
             $('#cig-acc-note-input').val(aNote || '');
@@ -389,7 +390,7 @@ jQuery(function($) {
         $(document).on('click', '#cig-save-note', function() {
             var note = $('#cig-acc-note-input').val();
             var $btn = $(this);
-            $btn.prop('disabled', true).text('Saving...');
+            $btn.prop('disabled', true).text(cigAjax.i18n?.saving || 'Saving...');
             
             $.ajax({
                 url: cigAjax.ajax_url, 
@@ -397,19 +398,27 @@ jQuery(function($) {
                 dataType: 'json',
                 data: { action: 'cig_update_accountant_note', nonce: cigAjax.nonce, invoice_id: currentInvoiceId, note: note },
                 success: function(res) {
-                    $btn.prop('disabled', false).text('Save Note');
+                    $btn.prop('disabled', false).text(cigAjax.i18n?.save_note || 'Save Note');
                     if(res.success) {
                         $('#cig-note-modal').fadeOut(200);
                         loadAccountantInvoices(accCurrentPage);
-                    } else { alert('Error saving note'); }
+                    } else { alert(cigAjax.i18n?.error_saving_note || 'Error saving note'); }
                 },
-                error: function() { $btn.prop('disabled', false).text('Save Note'); alert('Connection error'); }
+                error: function() { $btn.prop('disabled', false).text(cigAjax.i18n?.save_note || 'Save Note'); alert(cigAjax.i18n?.connection_error || 'Connection error'); }
             });
         });
 
         $('.cig-modal-close').on('click', function(){ $(this).closest('.cig-modal').fadeOut(200); });
         $(window).on('click', function(e) { if ($(e.target).hasClass('cig-modal')) $(e.target).fadeOut(200); });
-        function getStatusLabel(type) { var map = { 'rs': 'RS ატვირთული', 'credit': 'განვადება', 'receipt': 'მთლიანი ჩეკი', 'corrected': 'კორექტირებული' }; return map[type] || type; }
+        function getStatusLabel(type) { 
+            var map = { 
+                'rs': cigAjax.i18n?.rs_uploaded || 'RS Uploaded', 
+                'credit': cigAjax.i18n?.credit_installment || 'Credit / Installment', 
+                'receipt': cigAjax.i18n?.receipt_full || 'Full Receipt', 
+                'corrected': cigAjax.i18n?.corrected || 'Corrected' 
+            }; 
+            return map[type] || type; 
+        }
         function escapeHtml(text) { if (!text) return ''; return String(text).replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]; }); }
 
         // Init

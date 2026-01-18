@@ -182,7 +182,7 @@ jQuery(function ($) {
         usersSectionFilters.dateFrom = $('#cig-users-date-from').val();
         usersSectionFilters.dateTo = $('#cig-users-date-to').val();
         if (!usersSectionFilters.dateFrom || !usersSectionFilters.dateTo) {
-            alert('Please select both dates');
+            alert(cigStats.i18n?.select_both_dates || 'Please select both dates');
             return;
         }
         $('.cig-users-quick-filter-btn').removeClass('active');
@@ -198,7 +198,7 @@ jQuery(function ($) {
         fictiveUsersFilters.dateFrom = $('#cig-fictive-users-date-from').val();
         fictiveUsersFilters.dateTo = $('#cig-fictive-users-date-to').val();
         if (!fictiveUsersFilters.dateFrom || !fictiveUsersFilters.dateTo) {
-            alert('Please select both dates');
+            alert(cigStats.i18n?.select_both_dates || 'Please select both dates');
             return;
         }
         $('.cig-fictive-users-quick-filter-btn').removeClass('active');
@@ -358,7 +358,7 @@ jQuery(function ($) {
     });
 
     $(document).on('click', '.cig-btn-delete-deposit', function() {
-        if(!confirm('Are you sure you want to delete this record?')) return;
+        if(!confirm(cigStats.i18n?.confirm_delete_record || 'Are you sure you want to delete this record?')) return;
         deleteDeposit($(this).data('id'));
     });
 
@@ -371,7 +371,7 @@ jQuery(function ($) {
         fictiveFilters.dateFrom = $('#cig-fictive-date-from').val();
         fictiveFilters.dateTo = $('#cig-fictive-date-to').val();
         if (!fictiveFilters.dateFrom || !fictiveFilters.dateTo) {
-            alert('Please select both dates');
+            alert(cigStats.i18n?.select_both_dates || 'Please select both dates');
             return;
         }
         $('.cig-fictive-quick-filter-btn').removeClass('active');
@@ -449,7 +449,7 @@ jQuery(function ($) {
       $('#cig-ext-accumulated').text('...');
       $('#cig-ext-deposited').text('...');
       $('#cig-ext-balance').text('...');
-      $('#cig-ext-history-tbody').html('<tr class="loading-row"><td colspan="4"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading...</p></div></td></tr>');
+      $('#cig-ext-history-tbody').html('<tr class="loading-row"><td colspan="4"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading || 'Loading...') + '</p></div></td></tr>');
 
       $.ajax({
           url: cigStats.ajax_url,
@@ -481,14 +481,14 @@ jQuery(function ($) {
               }
           },
           error: function() {
-              alert('Error loading external balance data.');
+              alert(cigStats.i18n?.error_loading_external || 'Error loading external balance data.');
           }
       });
   }
 
   function renderDepositHistory(history) {
       if (!history || !history.length) {
-          $('#cig-ext-history-tbody').html('<tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">No deposit history found.</td></tr>');
+          $('#cig-ext-history-tbody').html('<tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">' + (cigStats.i18n?.no_deposit_history || 'No deposit history found.') + '</td></tr>');
           return;
       }
 
@@ -510,16 +510,16 @@ jQuery(function ($) {
       var note = $('#cig-dep-note').val();
 
       if (!amount || parseFloat(amount) <= 0) {
-          alert('Please enter a valid amount.');
+          alert(cigStats.i18n?.enter_valid_amount || 'Please enter a valid amount.');
           return;
       }
       if (!date) {
-          alert('Please select a date.');
+          alert(cigStats.i18n?.select_date || 'Please select a date.');
           return;
       }
 
       var $btn = $('#cig-submit-deposit');
-      $btn.prop('disabled', true).text('Saving...');
+      $btn.prop('disabled', true).text(cigStats.i18n?.saving || 'Saving...');
 
       $.ajax({
           url: cigStats.ajax_url,
@@ -533,19 +533,19 @@ jQuery(function ($) {
               note: note
           },
           success: function(res) {
-              $btn.prop('disabled', false).text('Confirm');
+              $btn.prop('disabled', false).text(cigStats.i18n?.confirm || 'Confirm');
               if (res.success) {
                   $('#cig-deposit-modal').fadeOut();
                   $('#cig-dep-amount').val('');
                   $('#cig-dep-note').val('');
                   loadExternalBalance(); // Refresh
               } else {
-                  alert(res.data.message || 'Error saving deposit.');
+                  alert(res.data.message || cigStats.i18n?.error_saving_deposit || 'Error saving deposit.');
               }
           },
           error: function() {
-              $btn.prop('disabled', false).text('Confirm');
-              alert('Server error.');
+              $btn.prop('disabled', false).text(cigStats.i18n?.confirm || 'Confirm');
+              alert(cigStats.i18n?.server_error || 'Server error.');
           }
       });
   }
@@ -643,7 +643,7 @@ jQuery(function ($) {
           return;
       }
       
-      $('#cig-summary-fictive-invoices-tbody').html('<tr class="loading-row"><td colspan="6"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading...</p></div></td></tr>');
+      $('#cig-summary-fictive-invoices-tbody').html('<tr class="loading-row"><td colspan="6"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading || 'Loading...') + '</p></div></td></tr>');
       $panel.slideDown(150);
       
       $.ajax({
@@ -674,11 +674,11 @@ jQuery(function ($) {
                   });
                   $('#cig-summary-fictive-invoices-tbody').html(html);
               } else {
-                  $('#cig-summary-fictive-invoices-tbody').html('<tr class="no-results-row"><td colspan="6">No fictive invoices found</td></tr>');
+                  $('#cig-summary-fictive-invoices-tbody').html('<tr class="no-results-row"><td colspan="6">' + (cigStats.i18n?.no_fictive_invoices || 'No fictive invoices found') + '</td></tr>');
               }
           },
           error: function() {
-              $('#cig-summary-fictive-invoices-tbody').html('<tr class="no-results-row"><td colspan="6" style="color:#dc3545;">Error loading invoices</td></tr>');
+              $('#cig-summary-fictive-invoices-tbody').html('<tr class="no-results-row"><td colspan="6" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_fictive || 'Error loading invoices') + '</td></tr>');
           }
       });
   }
@@ -695,7 +695,7 @@ jQuery(function ($) {
       productPerfPagination.current_page = page;
 
       // Show loading state
-      $('#cig-product-perf-tbody').html('<tr class="loading-row"><td colspan="8"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading product performance...</p></div></td></tr>');
+      $('#cig-product-perf-tbody').html('<tr class="loading-row"><td colspan="8"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading_products || 'Loading product performance...') + '</p></div></td></tr>');
 
       $.ajax({
           url: cigStats.ajax_url,
@@ -720,12 +720,12 @@ jQuery(function ($) {
                   renderProductPagination();
                   updateProductSortArrows();
               } else {
-                  $('#cig-product-perf-tbody').html('<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">No products found</td></tr>');
+                  $('#cig-product-perf-tbody').html('<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">' + (cigStats.i18n?.no_products_found || 'No products found') + '</td></tr>');
                   $('#cig-product-pagination').html('');
               }
           },
           error: function() {
-              $('#cig-product-perf-tbody').html('<tr><td colspan="8" style="text-align:center; padding:20px; color:#dc3545;">Error loading products</td></tr>');
+              $('#cig-product-perf-tbody').html('<tr><td colspan="8" style="text-align:center; padding:20px; color:#dc3545;">' + (cigStats.i18n?.error_loading_products || 'Error loading products') + '</td></tr>');
               $('#cig-product-pagination').html('');
           }
       });
@@ -768,7 +768,7 @@ jQuery(function ($) {
    */
   function renderProductTable(products) {
       if (!products || !products.length) {
-          $('#cig-product-perf-tbody').html('<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">No products found</td></tr>');
+          $('#cig-product-perf-tbody').html('<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">' + (cigStats.i18n?.no_products_found || 'No products found') + '</td></tr>');
           return;
       }
 
@@ -902,7 +902,7 @@ jQuery(function ($) {
   function applyCustomDateRange() {
     var from = $('#cig-date-from').val();
     var to = $('#cig-date-to').val();
-    if (!from || !to) { alert('Please select both dates'); return; }
+    if (!from || !to) { alert(cigStats.i18n?.select_both_dates || 'Please select both dates'); return; }
     $('.cig-quick-filter-btn:not(.cig-users-quick-filter-btn):not(.cig-fictive-users-quick-filter-btn):not(.cig-fictive-quick-filter-btn)').removeClass('active');
     currentFilters.date_from = from; currentFilters.date_to = to;
     clearSummaryDropdowns(); hideUserDetail(); loadSummary(true);
@@ -1001,12 +1001,12 @@ jQuery(function ($) {
   }
 
   function loadUsers(force) {
-    if (force) { $('#cig-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading users...</p></div></td></tr>'); }
+    if (force) { $('#cig-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading_users || 'Loading users...') + '</p></div></td></tr>'); }
     $.ajax({
       url: cigStats.ajax_url, method: 'POST', dataType: 'json',
       data: { action: 'cig_get_users_statistics', nonce: cigStats.nonce, date_from: usersSectionFilters.dateFrom, date_to: usersSectionFilters.dateTo, search: usersSectionFilters.search, sort_by: currentSort.column, sort_order: currentSort.order, status: 'standard' },
-      success: function(res) { if (res && res.success && res.data) { usersData = res.data.users; filterUsers(); } else { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>'); } },
-      error: function() { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">Error loading users</td></tr>'); }
+      success: function(res) { if (res && res.success && res.data) { usersData = res.data.users; filterUsers(); } else { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7">' + (cigStats.i18n?.no_users_found || 'No users found') + '</td></tr>'); } },
+      error: function() { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_users || 'Error loading users') + '</td></tr>'); }
     });
   }
 
@@ -1024,7 +1024,7 @@ jQuery(function ($) {
     var start = (usersPagination.current_page - 1) * usersPagination.per_page;
     var end = start + usersPagination.per_page;
     var pageData = filtered.slice(start, end);
-    if (!pageData.length) { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>'); $('#cig-users-pagination').html(''); return; }
+    if (!pageData.length) { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7">' + (cigStats.i18n?.no_users_found || 'No users found') + '</td></tr>'); $('#cig-users-pagination').html(''); return; }
     var html = '';
     pageData.forEach(function(user){
       html += '<tr class="cig-user-row" data-user-id="' + user.user_id + '">';
@@ -1056,7 +1056,7 @@ jQuery(function ($) {
    */
   function loadFictiveUsers(force) {
     if (force) {
-      $('#cig-fictive-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading users...</p></div></td></tr>');
+      $('#cig-fictive-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading_users || 'Loading users...') + '</p></div></td></tr>');
     }
     $.ajax({
       url: cigStats.ajax_url,
@@ -1077,11 +1077,11 @@ jQuery(function ($) {
           fictiveUsersData = res.data.users;
           filterFictiveUsers();
         } else {
-          $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>');
+          $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7">' + (cigStats.i18n?.no_users_found || 'No users found') + '</td></tr>');
         }
       },
       error: function() {
-        $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">Error loading users</td></tr>');
+        $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_users || 'Error loading users') + '</td></tr>');
       }
     });
   }
@@ -1113,7 +1113,7 @@ jQuery(function ($) {
     var pageData = filtered.slice(start, end);
     
     if (!pageData.length) {
-      $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>');
+      $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7">' + (cigStats.i18n?.no_users_found || 'No users found') + '</td></tr>');
       $('#cig-fictive-users-pagination').html('');
       return;
     }
@@ -1217,22 +1217,22 @@ jQuery(function ($) {
     if (!user) return;
     currentUser = user; currentFilters.search = ''; $('#cig-invoice-search').val(''); $('#cig-user-payment-filter').val('all'); currentFilters.payment_method = 'all';
     var infoHtml = '<img src="' + user.user_avatar + '" alt="" class="user-info-avatar"><div class="user-info-details"><h3>' + escapeHtml(user.user_name) + '</h3><p class="user-info-email">' + escapeHtml(user.user_email) + '</p><div class="user-info-stats"><div class="user-info-stat"><span class="user-info-stat-label">Total Invoices</span><span class="user-info-stat-value">' + user.invoice_count + '</span></div><div class="user-info-stat"><span class="user-info-stat-label">Total Revenue</span><span class="user-info-stat-value">' + formatCurrency(user.total_revenue) + '</span></div><div class="user-info-stat"><span class="user-info-stat-label">Last Invoice</span><span class="user-info-stat-value">' + formatDateShort(user.last_invoice_date) + '</span></div></div></div>';
-    $('#cig-user-info').html(infoHtml); $('#cig-user-detail-title').text(user.user_name + ' - Invoices'); $('#cig-users-panel').hide(); $('#cig-user-detail-panel').fadeIn(150); loadUserInvoices(user.user_id);
+    $('#cig-user-info').html(infoHtml); $('#cig-user-detail-title').text(user.user_name + ' - ' + (cigStats.i18n?.invoices || 'Invoices')); $('#cig-users-panel').hide(); $('#cig-user-detail-panel').fadeIn(150); loadUserInvoices(user.user_id);
   }
   function hideUserDetail() { currentUser = null; invoicesData = []; $('#cig-user-detail-panel').hide(); $('#cig-users-panel').fadeIn(150); }
   function loadUserInvoices(userId) {
-    $('#cig-user-invoices-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading invoices...</p></div></td></tr>');
+    $('#cig-user-invoices-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading_invoices || 'Loading invoices...') + '</p></div></td></tr>');
     $.ajax({
       url: cigStats.ajax_url, method: 'POST', dataType: 'json',
       data: { action: 'cig_get_user_invoices', nonce: cigStats.nonce, user_id: userId, date_from: currentFilters.date_from, date_to: currentFilters.date_to, payment_method: currentFilters.payment_method === 'all' ? '' : currentFilters.payment_method, status: 'standard', search: currentFilters.search },
-      success: function(res) { if (res && res.success && res.data) { invoicesData = res.data.invoices; displayInvoicesPage(); } else { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">No invoices found</td></tr>'); } },
-      error: function() { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">Error loading invoices</td></tr>'); }
+      success: function(res) { if (res && res.success && res.data) { invoicesData = res.data.invoices; displayInvoicesPage(); } else { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">' + (cigStats.i18n?.no_invoices_found || 'No invoices found') + '</td></tr>'); } },
+      error: function() { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_invoices || 'Error loading invoices') + '</td></tr>'); }
     });
   }
   function filterUserInvoices() { var filtered = invoicesData; if (currentFilters.search) { var term = currentFilters.search.toLowerCase(); filtered = invoicesData.filter(function(inv){ return String(inv.invoice_number || '').toLowerCase().includes(term); }); } invoicesPagination.current_page = 1; displayInvoicesPage(filtered); }
   function displayInvoicesPage(filtered) {
     filtered = filtered || invoicesData; invoicesPagination.total_pages = Math.ceil(filtered.length / invoicesPagination.per_page); var start = (invoicesPagination.current_page - 1) * invoicesPagination.per_page; var end = start + invoicesPagination.per_page; var pageData = filtered.slice(start, end);
-    if (!pageData.length) { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">No invoices found</td></tr>'); $('#cig-invoices-pagination').html(''); return; }
+    if (!pageData.length) { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">' + (cigStats.i18n?.no_invoices_found || 'No invoices found') + '</td></tr>'); $('#cig-invoices-pagination').html(''); return; }
     var html = '';
     pageData.forEach(function(inv){
       var paymentClass = 'payment-' + inv.payment_type;
@@ -1254,12 +1254,12 @@ jQuery(function ($) {
     $panel.data('method', method);
     
     $('#cig-summary-products').hide(); $('#cig-summary-outstanding').hide();
-    $('#cig-summary-invoices-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading...</p></div></td></tr>');
+    $('#cig-summary-invoices-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading || 'Loading...') + '</p></div></td></tr>');
     
     if(titleText) {
         $('#cig-summary-title').html('<strong>' + escapeHtml(titleText) + '</strong>');
     } else {
-        $('#cig-summary-title').text('Invoices');
+        $('#cig-summary-title').text(cigStats.i18n?.invoices || 'Invoices');
     }
 
     $panel.slideDown(150);
@@ -1300,9 +1300,9 @@ jQuery(function ($) {
             html += '</tr>';
           });
           $('#cig-summary-invoices-tbody').html(html);
-        } else { $('#cig-summary-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">No invoices found</td></tr>'); }
+        } else { $('#cig-summary-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">' + (cigStats.i18n?.no_invoices_found || 'No invoices found') + '</td></tr>'); }
       },
-      error: function() { $('#cig-summary-invoices-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">Error loading invoices</td></tr>'); }
+      error: function() { $('#cig-summary-invoices-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_invoices || 'Error loading invoices') + '</td></tr>'); }
     });
   }
 
@@ -1316,7 +1316,7 @@ jQuery(function ($) {
       }
 
       $('#cig-summary-invoices').hide(); $('#cig-summary-products').hide();
-      $('#cig-summary-outstanding-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading unpaid invoices...</p></div></td></tr>');
+      $('#cig-summary-outstanding-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading_unpaid || 'Loading unpaid invoices...') + '</p></div></td></tr>');
       $panel.slideDown(150);
       $.ajax({
           url: cigStats.ajax_url, method: 'POST', dataType: 'json',
@@ -1343,20 +1343,20 @@ jQuery(function ($) {
                       html += '</tr>';
                   });
                   $('#cig-summary-outstanding-tbody').html(html);
-              } else { $('#cig-summary-outstanding-tbody').html('<tr class="no-results-row"><td colspan="9">No outstanding invoices found.</td></tr>'); }
+              } else { $('#cig-summary-outstanding-tbody').html('<tr class="no-results-row"><td colspan="9">' + (cigStats.i18n?.no_outstanding || 'No outstanding invoices found.') + '</td></tr>'); }
           },
-          error: function() { $('#cig-summary-outstanding-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">Error loading data.</td></tr>'); }
+          error: function() { $('#cig-summary-outstanding-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_data || 'Error loading data.') + '</td></tr>'); }
       });
   }
 
   function toggleProductsDropdown(status) {
     var $panel = $('#cig-summary-products');
-    var title = status === 'reserved' ? 'Products Reserved' : 'Products Sold';
-    $('#cig-summary-products-title').text(title); $('#cig-col-qty-label').text(status === 'reserved' ? 'Reserved Qty' : 'Quantity Sold');
+    var title = status === 'reserved' ? (cigStats.i18n?.products_reserved || 'Products Reserved') : (cigStats.i18n?.products_sold || 'Products Sold');
+    $('#cig-summary-products-title').text(title); $('#cig-col-qty-label').text(status === 'reserved' ? (cigStats.i18n?.reserved_qty || 'Reserved Qty') : (cigStats.i18n?.quantity_sold || 'Quantity Sold'));
     if ($panel.is(':visible') && $panel.data('status') === status) { $panel.slideUp(150); return; }
     $('#cig-summary-invoices').hide(); $('#cig-summary-outstanding').hide();
     $panel.data('status', status).slideDown(150);
-    $('#cig-summary-products-tbody').html('<tr class="loading-row"><td colspan="8"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading...</p></div></td></tr>');
+    $('#cig-summary-products-tbody').html('<tr class="loading-row"><td colspan="8"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading || 'Loading...') + '</p></div></td></tr>');
     $.ajax({
       url: cigStats.ajax_url, method: 'POST', dataType: 'json',
       data: { action: 'cig_get_products_by_filters', nonce: cigStats.nonce, date_from: currentFilters.date_from, date_to: currentFilters.date_to, status: status, payment_method: currentFilters.payment_method, invoice_status: currentFilters.status },
@@ -1368,9 +1368,9 @@ jQuery(function ($) {
             html += '<tr><td>' + img + '</td><td>' + escapeHtml(it.name || '') + '</td><td>' + escapeHtml(it.sku || '—') + '</td><td><strong>' + formatNumber(it.qty || 0) + '</strong></td><td>' + escapeHtml(it.invoice_number || '') + '</td><td>' + escapeHtml(it.author_name || '') + '</td><td>' + formatDateTime(it.date) + '</td><td><a class="cig-btn-sm cig-btn-view" href="' + it.view_url + '" target="_blank">ნახვა</a> <a class="cig-btn-sm cig-btn-edit" href="' + it.edit_url + '" target="_blank">რედაქტირება</a></td></tr>';
           });
           $('#cig-summary-products-tbody').html(html);
-        } else { $('#cig-summary-products-tbody').html('<tr class="no-results-row"><td colspan="8">No products found</td></tr>'); }
+        } else { $('#cig-summary-products-tbody').html('<tr class="no-results-row"><td colspan="8">' + (cigStats.i18n?.no_products_found || 'No products found') + '</td></tr>'); }
       },
-      error: function() { $('#cig-summary-products-tbody').html('<tr class="no-results-row"><td colspan="8" style="color:#dc3545;">Error loading products</td></tr>'); }
+      error: function() { $('#cig-summary-products-tbody').html('<tr class="no-results-row"><td colspan="8" style="color:#dc3545;">' + (cigStats.i18n?.error_loading_products || 'Error loading products') + '</td></tr>'); }
     });
   }
 
@@ -1379,12 +1379,12 @@ jQuery(function ($) {
     var $container = (type === 'users') ? $('#cig-users-pagination') : $('#cig-invoices-pagination');
     if (cfg.total_pages <= 1) { $container.html(''); return; }
     var cp = cfg.current_page, tp = cfg.total_pages;
-    var html = '<button class="cig-page-btn" data-page="' + (cp - 1) + '" ' + (cp <= 1 ? 'disabled' : '') + '>« Prev</button>';
+    var html = '<button class="cig-page-btn" data-page="' + (cp - 1) + '" ' + (cp <= 1 ? 'disabled' : '') + '>« ' + (cigStats.i18n?.prev || 'Prev') + '</button>';
     var startPage = Math.max(1, cp - 2); var endPage = Math.min(tp, cp + 2);
     if (startPage > 1) { html += '<button class="cig-page-btn" data-page="1">1</button>'; if (startPage > 2) html += '<span style="padding:0 5px;color:#999;">...</span>'; }
     for (var i = startPage; i <= endPage; i++) { html += '<button class="cig-page-btn ' + (i === cp ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>'; }
     if (endPage < tp) { if (endPage < tp - 1) html += '<span style="padding:0 5px;color:#999;">...</span>'; html += '<button class="cig-page-btn" data-page="' + tp + '">' + tp + '</button>'; }
-    html += '<button class="cig-page-btn" data-page="' + (cp + 1) + '" ' + (cp >= tp ? 'disabled' : '') + '>Next »</button>';
+    html += '<button class="cig-page-btn" data-page="' + (cp + 1) + '" ' + (cp >= tp ? 'disabled' : '') + '>' + (cigStats.i18n?.next || 'Next') + ' »</button>';
     $container.html(html);
   }
 
@@ -1411,7 +1411,7 @@ jQuery(function ($) {
   // --- CUSTOMER INSIGHT LOGIC ---
 
   function loadCustomers() {
-      $('#cig-customers-tbody').html('<tr class="loading-row"><td colspan="6"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading customers...</p></div></td></tr>');
+      $('#cig-customers-tbody').html('<tr class="loading-row"><td colspan="6"><div class="cig-loading-spinner"><div class="spinner"></div><p>' + (cigStats.i18n?.loading_customers || 'Loading customers...') + '</p></div></td></tr>');
       
       $.ajax({
           url: cigStats.ajax_url,
@@ -1432,19 +1432,19 @@ jQuery(function ($) {
                   custPagination.total_pages = res.data.total_pages; 
                   renderCustomerPagination();
               } else {
-                  $('#cig-customers-tbody').html('<tr><td colspan="6" style="text-align:center;">No customers found</td></tr>');
+                  $('#cig-customers-tbody').html('<tr><td colspan="6" style="text-align:center;">' + (cigStats.i18n?.no_customers_found || 'No customers found') + '</td></tr>');
                   $('#cig-customers-pagination').empty();
               }
           },
           error: function() {
-              $('#cig-customers-tbody').html('<tr><td colspan="6" style="text-align:center;color:red;">Error loading data</td></tr>');
+              $('#cig-customers-tbody').html('<tr><td colspan="6" style="text-align:center;color:red;">' + (cigStats.i18n?.error_loading_data || 'Error loading data') + '</td></tr>');
           }
       });
   }
 
   function renderCustomerTable(customers) {
       if(!customers || !customers.length) {
-          $('#cig-customers-tbody').html('<tr><td colspan="6" style="text-align:center;">No data found</td></tr>');
+          $('#cig-customers-tbody').html('<tr><td colspan="6" style="text-align:center;">' + (cigStats.i18n?.no_customers_found || 'No data found') + '</td></tr>');
           return;
       }
       var html = '';
@@ -1496,21 +1496,21 @@ jQuery(function ($) {
           },
           success: function(res) {
               if(res.success && res.data) {
-                  $('#cig-customer-detail-title').text(res.data.customer_name + ' - Invoices');
+                  $('#cig-customer-detail-title').text(res.data.customer_name + ' - ' + (cigStats.i18n?.invoices || 'Invoices'));
                   renderCustomerInvoices(res.data.invoices);
               } else {
-                  $('#cig-cust-invoices-tbody').html('<tr><td colspan="7">No invoices found</td></tr>');
+                  $('#cig-cust-invoices-tbody').html('<tr><td colspan="7">' + (cigStats.i18n?.no_customer_invoices || 'No invoices found') + '</td></tr>');
               }
           },
           error: function() {
-              $('#cig-cust-invoices-tbody').html('<tr><td colspan="7">Error loading details</td></tr>');
+              $('#cig-cust-invoices-tbody').html('<tr><td colspan="7">' + (cigStats.i18n?.error_loading_details || 'Error loading details') + '</td></tr>');
           }
       });
   }
 
   function renderCustomerInvoices(invoices) {
       if(!invoices || !invoices.length) {
-          $('#cig-cust-invoices-tbody').html('<tr><td colspan="7">No invoices found</td></tr>');
+          $('#cig-cust-invoices-tbody').html('<tr><td colspan="7">' + (cigStats.i18n?.no_customer_invoices || 'No invoices found') + '</td></tr>');
           return;
       }
       var html = '';

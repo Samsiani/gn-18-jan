@@ -116,12 +116,6 @@ jQuery(function ($) {
       });
 
       updateGrandTotal();
-
-      // Clear DB Cart after loading
-      $.post(cigAjax.ajax_url, {
-          action: 'cig_clear_cart_db',
-          nonce: cigAjax.nonce
-      });
   }
 
   // ---------------------------------------------------------
@@ -533,6 +527,11 @@ jQuery(function ($) {
 
     $.post(cigAjax.ajax_url, { action: action, nonce: cigAjax.nonce, payload: JSON.stringify(payload) }, function(res) {
         if (res.success) {
+            // Clear DB Cart after successful save
+            $.post(cigAjax.ajax_url, {
+                action: 'cig_clear_cart_db',
+                nonce: cigAjax.nonce
+            });
             alert(editMode ? 'Updated successfully.' : 'Saved successfully.');
             window.location.href = res.data.view_url;
         } else {

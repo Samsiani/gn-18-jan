@@ -29,6 +29,9 @@ jQuery(function ($) {
   // External Balance Variables (NEW)
   var extFilters = { dateFrom: '', dateTo: '' };
 
+  // Fictive Invoices Tab Variables
+  var fictiveFilters = { dateFrom: '', dateTo: '', search: '' };
+
   // Product Performance Table Variables
   var productPerfFilters = { dateFrom: '', dateTo: '', search: '' };
   var productPerfData = [];
@@ -43,6 +46,7 @@ jQuery(function ($) {
     // Load active tab data
     var activeTab = $('.nav-tab-active').data('tab');
     if (activeTab === 'overview') loadStatistics(true);
+    else if (activeTab === 'fictive') loadFictiveStatistics(true);
     else if (activeTab === 'external') loadExternalBalance();
     else if (activeTab === 'customer') loadCustomers();
     else if (activeTab === 'product') loadProductTable();
@@ -78,6 +82,8 @@ jQuery(function ($) {
             loadExternalBalance();
         } else if (tab === 'product') {
             loadProductTable();
+        } else if (tab === 'fictive') {
+            loadFictiveStatistics(true);
         }
     });
 
@@ -92,19 +98,15 @@ jQuery(function ($) {
       loadStatistics(true);
     });
 
-    $(document).on('change', '#cig-status-filter', function() {
-      currentFilters.status = $(this).val();
-      clearSummaryDropdowns();
-      hideUserDetail();
-      loadStatistics(true);
-    });
-
     $(document).on('click', '#cig-refresh-stats', function() {
       var tab = $('.nav-tab-active').data('tab');
       if (tab === 'overview') {
           clearSummaryDropdowns();
           hideUserDetail();
           loadStatistics(true);
+      } else if (tab === 'fictive') {
+          clearFictiveDropdown();
+          loadFictiveStatistics(true);
       } else if (tab === 'customer') {
           loadCustomers();
       } else if (tab === 'external') {
@@ -288,6 +290,45 @@ jQuery(function ($) {
         deleteDeposit($(this).data('id'));
     });
 
+    // --- FICTIVE INVOICES TAB EVENTS ---
+    // Quick Filter Buttons
+    $(document).on('click', '.cig-fictive-quick-filter-btn', handleFictiveQuickFilter);
+    
+    // Date Range Apply Button
+    $(document).on('click', '#cig-fictive-apply-date-range', function() {
+        fictiveFilters.dateFrom = $('#cig-fictive-date-from').val();
+        fictiveFilters.dateTo = $('#cig-fictive-date-to').val();
+        if (!fictiveFilters.dateFrom || !fictiveFilters.dateTo) {
+            alert('Please select both dates');
+            return;
+        }
+        $('.cig-fictive-quick-filter-btn').removeClass('active');
+        clearFictiveDropdown();
+        loadFictiveStatistics(true);
+    });
+    
+    // Search Input with Debounce
+    var fictiveSearchTimeout;
+    $(document).on('input', '#cig-fictive-search', function() {
+        clearTimeout(fictiveSearchTimeout);
+        var term = $(this).val();
+        fictiveSearchTimeout = setTimeout(function() {
+            fictiveFilters.search = term;
+            clearFictiveDropdown();
+            loadFictiveStatistics(true);
+        }, 400);
+    });
+    
+    // Fictive Summary Cards Click - Drill-Down
+    $(document).on('click', '.cig-fictive-card', function() {
+        toggleFictiveInvoicesDropdown();
+    });
+    
+    // Close Button for Fictive Dropdown
+    $(document).on('click', '.cig-summary-close[data-target="#cig-summary-fictive-invoices"]', function() {
+        $('#cig-summary-fictive-invoices').slideUp(150);
+    });
+
     // --- PRODUCT PERFORMANCE TABLE EVENTS ---
     // Date Apply Button
     $(document).on('click', '#cig-pp-apply-date', function() {
@@ -453,6 +494,145 @@ jQuery(function ($) {
               } else {
                   alert(res.data.message);
               }
+          }
+      });
+  }
+
+  // --- FICTIVE INVOICES TAB LOGIC ---
+
+  /**
+   * Handle Quick Filter Button Click for Fictive Tab
+   */
+  function handleFictiveQuickFilter() {
+      $('.cig-fictive-quick-filter-btn').removeClass('active');
+      $(this).addClass('active');
+      var filter = $(this).data('filter');
+      var today = new Date();
+      var from = '', to = '';
+      switch(filter) {
+          case 'today': 
+              from = to = formatDate(today); 
+              break;
+          case 'this_week': 
+              var ws = new Date(today); 
+              ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); 
+              from = formatDate(ws); 
+              to = formatDate(today); 
+              break;
+          case 'this_month': 
+              from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); 
+              to = formatDate(today); 
+              break;
+          case 'last_30_days': 
+              var p30 = new Date(today); 
+              p30.setDate(today.getDate() - 30); 
+              from = formatDate(p30); 
+              to = formatDate(today); 
+              break;
+          case 'all_time': 
+              from = ''; 
+              to = ''; 
+              break;
+      }
+      $('#cig-fictive-date-from').val(from);
+      $('#cig-fictive-date-to').val(to);
+      fictiveFilters.dateFrom = from;
+      fictiveFilters.dateTo = to;
+      clearFictiveDropdown();
+      loadFictiveStatistics(true);
+  }
+
+  /**
+   * Load Fictive Statistics Summary
+   * Calls cig_get_statistics_summary with status='fictive' and payment_method=''
+   */
+  function loadFictiveStatistics(force) {
+      if (force) {
+          $('#stat-fictive-invoices').html('<span class="loading-stat">...</span>');
+          $('#stat-fictive-amount').html('<span class="loading-stat">...</span>');
+      }
+      $.ajax({
+          url: cigStats.ajax_url,
+          method: 'POST',
+          dataType: 'json',
+          data: {
+              action: 'cig_get_statistics_summary',
+              nonce: cigStats.nonce,
+              date_from: fictiveFilters.dateFrom,
+              date_to: fictiveFilters.dateTo,
+              payment_method: '',  // Empty - Fictive invoices don't have payments
+              status: 'fictive',   // ALWAYS fictive for this tab
+              search: fictiveFilters.search
+          },
+          success: function(res) {
+              if (res && res.success && res.data) {
+                  $('#stat-fictive-invoices').html(formatNumber(res.data.total_invoices));
+                  $('#stat-fictive-amount').html(formatCurrency(res.data.total_revenue));
+              } else {
+                  $('#stat-fictive-invoices').text('0');
+                  $('#stat-fictive-amount').text('0.00 ₾');
+              }
+          },
+          error: function() {
+              $('#stat-fictive-invoices').text('0');
+              $('#stat-fictive-amount').text('0.00 ₾');
+          }
+      });
+  }
+
+  /**
+   * Clear Fictive Dropdown
+   */
+  function clearFictiveDropdown() {
+      $('#cig-summary-fictive-invoices').hide();
+  }
+
+  /**
+   * Toggle Fictive Invoices Drill-Down Dropdown
+   */
+  function toggleFictiveInvoicesDropdown() {
+      var $panel = $('#cig-summary-fictive-invoices');
+      if ($panel.is(':visible')) {
+          $panel.slideUp(150);
+          return;
+      }
+      
+      $('#cig-summary-fictive-invoices-tbody').html('<tr class="loading-row"><td colspan="6"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading...</p></div></td></tr>');
+      $panel.slideDown(150);
+      
+      $.ajax({
+          url: cigStats.ajax_url,
+          method: 'POST',
+          dataType: 'json',
+          data: {
+              action: 'cig_get_invoices_by_filters',
+              nonce: cigStats.nonce,
+              date_from: fictiveFilters.dateFrom,
+              date_to: fictiveFilters.dateTo,
+              payment_method: '',   // Empty - Fictive invoices don't have payments
+              status: 'fictive',    // ALWAYS fictive for this tab
+              search: fictiveFilters.search
+          },
+          success: function(res) {
+              if (res && res.success && res.data && res.data.invoices && res.data.invoices.length) {
+                  var html = '';
+                  res.data.invoices.forEach(function(inv) {
+                      html += '<tr>';
+                      html += '<td><strong>' + escapeHtml(inv.invoice_number || '') + '</strong></td>';
+                      html += '<td>' + escapeHtml(inv.customer) + '</td>';
+                      html += '<td><strong>' + formatCurrency(inv.total || 0) + '</strong></td>';
+                      html += '<td>' + formatDateTime(inv.date) + '</td>';
+                      html += '<td>' + escapeHtml(inv.author || '') + '</td>';
+                      html += '<td><a class="cig-btn-sm cig-btn-view" href="' + inv.view_url + '" target="_blank">ნახვა</a> <a class="cig-btn-sm cig-btn-edit" href="' + inv.edit_url + '" target="_blank">რედაქტირება</a></td>';
+                      html += '</tr>';
+                  });
+                  $('#cig-summary-fictive-invoices-tbody').html(html);
+              } else {
+                  $('#cig-summary-fictive-invoices-tbody').html('<tr class="no-results-row"><td colspan="6">No fictive invoices found</td></tr>');
+              }
+          },
+          error: function() {
+              $('#cig-summary-fictive-invoices-tbody').html('<tr class="no-results-row"><td colspan="6" style="color:#dc3545;">Error loading invoices</td></tr>');
           }
       });
   }
@@ -662,7 +842,7 @@ jQuery(function ($) {
           date_from: currentFilters.date_from, 
           date_to: currentFilters.date_to, 
           payment_method: $('#cig-payment-filter').val(), // Global filter if any
-          status: currentFilters.status,
+          status: 'standard',  // General Overview tab ALWAYS uses 'standard' (Active invoices only)
           search: currentFilters.search
       },
       success: function(res) {
@@ -742,7 +922,7 @@ jQuery(function ($) {
     if (force) { $('#cig-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading users...</p></div></td></tr>'); }
     $.ajax({
       url: cigStats.ajax_url, method: 'POST', dataType: 'json',
-      data: { action: 'cig_get_users_statistics', nonce: cigStats.nonce, date_from: currentFilters.date_from, date_to: currentFilters.date_to, search: currentFilters.search, sort_by: currentSort.column, sort_order: currentSort.order, status: currentFilters.status },
+      data: { action: 'cig_get_users_statistics', nonce: cigStats.nonce, date_from: currentFilters.date_from, date_to: currentFilters.date_to, search: currentFilters.search, sort_by: currentSort.column, sort_order: currentSort.order, status: 'standard' },
       success: function(res) { if (res && res.success && res.data) { usersData = res.data.users; filterUsers(); } else { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>'); } },
       error: function() { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">Error loading users</td></tr>'); }
     });
@@ -798,7 +978,7 @@ jQuery(function ($) {
     $('#cig-user-invoices-tbody').html('<tr class="loading-row"><td colspan="9"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading invoices...</p></div></td></tr>');
     $.ajax({
       url: cigStats.ajax_url, method: 'POST', dataType: 'json',
-      data: { action: 'cig_get_user_invoices', nonce: cigStats.nonce, user_id: userId, date_from: currentFilters.date_from, date_to: currentFilters.date_to, payment_method: currentFilters.payment_method === 'all' ? '' : currentFilters.payment_method, status: currentFilters.status, search: currentFilters.search },
+      data: { action: 'cig_get_user_invoices', nonce: cigStats.nonce, user_id: userId, date_from: currentFilters.date_from, date_to: currentFilters.date_to, payment_method: currentFilters.payment_method === 'all' ? '' : currentFilters.payment_method, status: 'standard', search: currentFilters.search },
       success: function(res) { if (res && res.success && res.data) { invoicesData = res.data.invoices; displayInvoicesPage(); } else { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9">No invoices found</td></tr>'); } },
       error: function() { $('#cig-user-invoices-tbody').html('<tr class="no-results-row"><td colspan="9" style="color:#dc3545;">Error loading invoices</td></tr>'); }
     });
@@ -846,7 +1026,7 @@ jQuery(function ($) {
           date_from: currentFilters.date_from, 
           date_to: currentFilters.date_to, 
           payment_method: method, // Pass specific method from card
-          status: currentFilters.status,
+          status: 'standard',  // General Overview tab ALWAYS uses 'standard' (Active invoices only)
           search: currentFilters.search
       },
       success: function(res) {

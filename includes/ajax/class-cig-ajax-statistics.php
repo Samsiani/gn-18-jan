@@ -539,7 +539,9 @@ class CIG_Ajax_Statistics {
 
         // Determine if we're filtering by payment method (cash flow drill-down)
         // Include 'all' (Total Paid) case - this should also filter by payment date
-        $is_payment_method_filter = $mf && $mf !== 'reserved_invoices';
+        // IF status is 'fictive', strictly disable payment method filtering logic,
+        // because fictive invoices do not have payment records in the DB.
+        $is_payment_method_filter = ($status !== 'fictive') && ($mf && $mf !== 'reserved_invoices');
         $is_all_paid_filter = ($mf === 'all');
 
         // Build WHERE clause
@@ -774,7 +776,9 @@ class CIG_Ajax_Statistics {
         
         // Determine if we're filtering by payment method (cash flow drill-down)
         // Include 'all' (Total Paid) case - this should also filter by payment date
-        $is_payment_method_filter = $mf && $mf !== 'reserved_invoices';
+        // IF status is 'fictive', strictly disable payment method filtering logic,
+        // because fictive invoices do not have payment records in the DB.
+        $is_payment_method_filter = ($status !== 'fictive') && ($mf && $mf !== 'reserved_invoices');
         $is_all_paid_filter = ($mf === 'all');
         
         // Use a reasonable limit to avoid performance issues

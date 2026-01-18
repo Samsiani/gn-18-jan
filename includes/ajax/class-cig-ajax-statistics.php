@@ -66,6 +66,28 @@ class CIG_Ajax_Statistics {
     }
 
     /**
+     * Get the appropriate date column for filtering based on invoice status.
+     * Fictive invoices use created_at (since sale_date is NULL), 
+     * while standard invoices use sale_date.
+     *
+     * Note: Column names cannot be parameterized in SQL prepared statements,
+     * so we use a whitelist approach for security. The returned value is
+     * guaranteed to be one of the whitelisted column names.
+     *
+     * @param string $status The invoice status ('fictive', 'standard', 'all', etc.)
+     * @return string The whitelisted date column name with table alias
+     */
+    private function get_date_column_for_status($status) {
+        // Whitelist of allowed column names for security - only these exact values can be returned
+        $allowed_columns = [
+            'fictive' => 'i.created_at',
+            'default' => 'i.sale_date'
+        ];
+        
+        return ($status === 'fictive') ? $allowed_columns['fictive'] : $allowed_columns['default'];
+    }
+
+    /**
      * Get statistics summary using raw SQL on custom tables
      * 
      * Revenue Calculation: Sum total_amount from cig_invoices WHERE sale_date is within range
@@ -116,7 +138,7 @@ class CIG_Ajax_Statistics {
         }
         
         // Filter by date: use created_at for fictive invoices, sale_date for standard
-        $date_column = ($status === 'fictive') ? 'i.created_at' : 'i.sale_date';
+        $date_column = $this->get_date_column_for_status($status);
         if ($date_from) { 
             $where_revenue .= " AND {$date_column} >= %s"; 
             $params_revenue[] = $date_from . ' 00:00:00'; 
@@ -215,7 +237,7 @@ class CIG_Ajax_Statistics {
         }
         
         // Filter by date: use created_at for fictive invoices, sale_date for standard
-        $date_column = ($status === 'fictive') ? 'i.created_at' : 'i.sale_date';
+        $date_column = $this->get_date_column_for_status($status);
         if ($date_from) { 
             $where_items .= " AND {$date_column} >= %s"; 
             $params_items[] = $date_from . ' 00:00:00'; 
@@ -615,8 +637,8 @@ class CIG_Ajax_Statistics {
         } else {
             // GENERAL OVERVIEW / RESERVED INVOICES / FICTIVE: Filter by appropriate date column
             // For fictive invoices, use created_at; for standard invoices, use sale_date
-            $date_column = ($status === 'fictive') ? 'i.created_at' : 'i.sale_date';
-            $order_column = ($status === 'fictive') ? 'i.created_at' : 'i.sale_date';
+            $date_column = $this->get_date_column_for_status($status);
+            $order_column = $this->get_date_column_for_status($status);
             
             if ($date_from) { 
                 $where .= " AND {$date_column} >= %s"; 

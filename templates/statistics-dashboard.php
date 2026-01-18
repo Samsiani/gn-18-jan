@@ -26,11 +26,11 @@ if (!defined('ABSPATH')) {
     </h1>
 
     <h2 class="nav-tab-wrapper cig-stats-tabs">
-        <a href="#tab-overview" class="nav-tab nav-tab-active" data-tab="overview"><?php esc_html_e('General Overview', 'cig'); ?></a>
-        <a href="#tab-fictive" class="nav-tab" data-tab="fictive"><?php esc_html_e('Fictive Invoices', 'cig'); ?></a>
-        <a href="#tab-product" class="nav-tab" data-tab="product"><?php esc_html_e('Product Insight', 'cig'); ?></a>
-        <a href="#tab-customer" class="nav-tab" data-tab="customer"><?php esc_html_e('Customer Insight', 'cig'); ?></a>
-        <a href="#tab-external" class="nav-tab" data-tab="external"><?php esc_html_e('External Balance', 'cig'); ?></a> </h2>
+        <a href="#tab-overview" class="nav-tab nav-tab-active" data-tab="overview"><span class="dashicons dashicons-chart-area"></span> <?php esc_html_e('General Overview', 'cig'); ?></a>
+        <a href="#tab-fictive" class="nav-tab" data-tab="fictive"><span class="dashicons dashicons-hidden"></span> <?php esc_html_e('Fictive Invoices', 'cig'); ?></a>
+        <a href="#tab-product" class="nav-tab" data-tab="product"><span class="dashicons dashicons-products"></span> <?php esc_html_e('Product Insight', 'cig'); ?></a>
+        <a href="#tab-customer" class="nav-tab" data-tab="customer"><span class="dashicons dashicons-businessperson"></span> <?php esc_html_e('Customer Insight', 'cig'); ?></a>
+        <a href="#tab-external" class="nav-tab" data-tab="external"><span class="dashicons dashicons-wallet"></span> <?php esc_html_e('External Balance', 'cig'); ?></a> </h2>
 
     <div id="cig-tab-overview" class="cig-tab-content active">
         <div class="cig-stats-filters-bar">
@@ -353,12 +353,12 @@ if (!defined('ABSPATH')) {
             <div class="cig-filters-row">
                 <div class="cig-filter-group">
                     <label><?php esc_html_e('Quick Filters:', 'cig'); ?></label>
-                    <div class="cig-quick-filters cig-fictive-quick-filters">
-                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="today"><?php esc_html_e('Today', 'cig'); ?></button>
-                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="this_week"><?php esc_html_e('This Week', 'cig'); ?></button>
-                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="this_month"><?php esc_html_e('This Month', 'cig'); ?></button>
-                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="last_30_days"><?php esc_html_e('Last 30 Days', 'cig'); ?></button>
-                        <button type="button" class="cig-fictive-quick-filter-btn active" data-filter="all_time"><?php esc_html_e('All Time', 'cig'); ?></button>
+                    <div class="cig-quick-filters">
+                        <button type="button" class="cig-quick-filter-btn cig-fictive-quick-filter-btn" data-filter="today"><?php esc_html_e('Today', 'cig'); ?></button>
+                        <button type="button" class="cig-quick-filter-btn cig-fictive-quick-filter-btn" data-filter="this_week"><?php esc_html_e('This Week', 'cig'); ?></button>
+                        <button type="button" class="cig-quick-filter-btn cig-fictive-quick-filter-btn" data-filter="this_month"><?php esc_html_e('This Month', 'cig'); ?></button>
+                        <button type="button" class="cig-quick-filter-btn cig-fictive-quick-filter-btn" data-filter="last_30_days"><?php esc_html_e('Last 30 Days', 'cig'); ?></button>
+                        <button type="button" class="cig-quick-filter-btn cig-fictive-quick-filter-btn active" data-filter="all_time"><?php esc_html_e('All Time', 'cig'); ?></button>
                     </div>
                 </div>
 

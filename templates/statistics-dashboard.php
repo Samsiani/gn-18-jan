@@ -84,7 +84,7 @@ if (!defined('ABSPATH')) {
 
         <div class="cig-stats-summary" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
             
-            <div class="cig-stat-card" id="cig-card-total-invoices" data-dropdown="invoices" data-method="all">
+            <div class="cig-stat-card" id="cig-card-total-invoices" data-dropdown="invoices" data-method="">
                 <div class="cig-stat-icon" style="background:#50529d;">
                     <span class="dashicons dashicons-media-spreadsheet"></span>
                 </div>
@@ -106,7 +106,7 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
 
-            <div class="cig-stat-card" id="cig-card-total-revenue" data-dropdown="invoices" data-method="all">
+            <div class="cig-stat-card" id="cig-card-total-revenue" data-dropdown="invoices" data-method="">
                 <div class="cig-stat-icon" style="background:#17a2b8;">
                     <span class="dashicons dashicons-chart-bar"></span>
                 </div>

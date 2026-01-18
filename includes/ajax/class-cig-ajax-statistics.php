@@ -327,22 +327,24 @@ class CIG_Ajax_Statistics {
             $where .= " AND (i.status = 'standard' OR i.status IS NULL)";
         }
         
-        // Filter by sale_date
+        // Filter by date: use created_at for fictive invoices, sale_date for standard
+        $date_column = $this->get_date_column_for_status($status);
         if ($date_from) { 
-            $where .= " AND i.sale_date >= %s"; 
+            $where .= " AND {$date_column} >= %s"; 
             $params[] = $date_from . ' 00:00:00'; 
         }
         if ($date_to) { 
-            $where .= " AND i.sale_date <= %s"; 
+            $where .= " AND {$date_column} <= %s"; 
             $params[] = $date_to . ' 23:59:59'; 
         }
 
         // Build SQL query for user statistics
+        // For last_invoice_date, use the same date column as filtering
         $sql = "SELECT 
             i.author_id,
             COUNT(DISTINCT i.id) as invoice_count,
             COALESCE(SUM(i.total_amount), 0) as total_revenue,
-            MAX(i.sale_date) as last_invoice_date
+            MAX({$date_column}) as last_invoice_date
             FROM {$this->table_invoices} i 
             {$where}
             GROUP BY i.author_id";
@@ -370,11 +372,11 @@ class CIG_Ajax_Statistics {
             }
             
             if ($date_from) { 
-                $items_where .= " AND i.sale_date >= %s"; 
+                $items_where .= " AND {$date_column} >= %s"; 
                 $items_params[] = $date_from . ' 00:00:00'; 
             }
             if ($date_to) { 
-                $items_where .= " AND i.sale_date <= %s"; 
+                $items_where .= " AND {$date_column} <= %s"; 
                 $items_params[] = $date_to . ' 23:59:59'; 
             }
 
@@ -1004,13 +1006,14 @@ class CIG_Ajax_Statistics {
             $where .= " AND (i.status = 'standard' OR i.status IS NULL)";
         }
         
-        // Filter by sale_date
+        // Filter by date: use created_at for fictive invoices, sale_date for standard
+        $date_column = $this->get_date_column_for_status($invoice_status);
         if ($date_from) { 
-            $where .= " AND i.sale_date >= %s"; 
+            $where .= " AND {$date_column} >= %s"; 
             $params[] = $date_from . ' 00:00:00'; 
         }
         if ($date_to) { 
-            $where .= " AND i.sale_date <= %s"; 
+            $where .= " AND {$date_column} <= %s"; 
             $params[] = $date_to . ' 23:59:59'; 
         }
         
@@ -1018,7 +1021,7 @@ class CIG_Ajax_Statistics {
         $where .= " AND it.item_status = %s";
         $params[] = $item_status;
 
-        // Main query
+        // Main query - select both sale_date and created_at, use appropriate one based on status
         $sql = "SELECT 
             it.product_name as name,
             it.sku,
@@ -1026,11 +1029,13 @@ class CIG_Ajax_Statistics {
             i.id as invoice_id,
             i.invoice_number,
             i.sale_date,
+            i.created_at,
+            i.status as invoice_status,
             i.author_id
             FROM {$this->table_items} it
             INNER JOIN {$this->table_invoices} i ON it.invoice_id = i.id
             {$where}
-            ORDER BY i.sale_date DESC
+            ORDER BY {$date_column} DESC
             LIMIT 500";
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
@@ -1057,6 +1062,9 @@ class CIG_Ajax_Statistics {
                 }
             }
 
+            // Use created_at for fictive invoices, sale_date for standard
+            $display_date = ($it['invoice_status'] === 'fictive') ? ($it['created_at'] ?? '') : ($it['sale_date'] ?? '');
+
             $rows[] = [
                 'name' => $it['name'] ?? '',
                 'sku' => $it['sku'] ?? '',
@@ -1065,7 +1073,7 @@ class CIG_Ajax_Statistics {
                 'invoice_id' => $id,
                 'invoice_number' => $it['invoice_number'],
                 'author_name' => $author_name,
-                'date' => $it['sale_date'] ?? '',
+                'date' => $display_date,
                 'view_url' => get_permalink($id),
                 'edit_url' => add_query_arg('edit', '1', get_permalink($id))
             ];

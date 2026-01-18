@@ -27,6 +27,7 @@ if (!defined('ABSPATH')) {
 
     <h2 class="nav-tab-wrapper cig-stats-tabs">
         <a href="#tab-overview" class="nav-tab nav-tab-active" data-tab="overview"><?php esc_html_e('General Overview', 'cig'); ?></a>
+        <a href="#tab-fictive" class="nav-tab" data-tab="fictive"><?php esc_html_e('Fictive Invoices', 'cig'); ?></a>
         <a href="#tab-product" class="nav-tab" data-tab="product"><?php esc_html_e('Product Insight', 'cig'); ?></a>
         <a href="#tab-customer" class="nav-tab" data-tab="customer"><?php esc_html_e('Customer Insight', 'cig'); ?></a>
         <a href="#tab-external" class="nav-tab" data-tab="external"><?php esc_html_e('External Balance', 'cig'); ?></a> </h2>
@@ -65,15 +66,6 @@ if (!defined('ABSPATH')) {
                             echo '<option value="' . esc_attr($key) . '">' . esc_html($label) . '</option>';
                         }
                         ?>
-                    </select>
-                </div>
-
-                <div class="cig-filter-group">
-                    <label for="cig-status-filter"><?php esc_html_e('Invoice Status:', 'cig'); ?></label>
-                    <select id="cig-status-filter" class="cig-select-filter" style="min-width:160px; border-color:#50529d;">
-                        <option value="standard" selected="selected"><?php esc_html_e('Active Only', 'cig'); ?></option>
-                        <option value="fictive"><?php esc_html_e('Fictive Only', 'cig'); ?></option>
-                        <option value="all"><?php esc_html_e('All Statuses', 'cig'); ?></option>
                     </select>
                 </div>
 
@@ -349,6 +341,96 @@ if (!defined('ABSPATH')) {
                 </div>
                 <div class="cig-table-footer">
                     <div class="cig-pagination" id="cig-invoices-pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FICTIVE INVOICES TAB -->
+    <div id="cig-tab-fictive" class="cig-tab-content" style="display:none;">
+        <!-- Fictive Tab Filters Bar - Date Range Only (no payment method) -->
+        <div class="cig-stats-filters-bar">
+            <div class="cig-filters-row">
+                <div class="cig-filter-group">
+                    <label><?php esc_html_e('Quick Filters:', 'cig'); ?></label>
+                    <div class="cig-quick-filters cig-fictive-quick-filters">
+                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="today"><?php esc_html_e('Today', 'cig'); ?></button>
+                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="this_week"><?php esc_html_e('This Week', 'cig'); ?></button>
+                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="this_month"><?php esc_html_e('This Month', 'cig'); ?></button>
+                        <button type="button" class="cig-fictive-quick-filter-btn" data-filter="last_30_days"><?php esc_html_e('Last 30 Days', 'cig'); ?></button>
+                        <button type="button" class="cig-fictive-quick-filter-btn active" data-filter="all_time"><?php esc_html_e('All Time', 'cig'); ?></button>
+                    </div>
+                </div>
+
+                <div class="cig-filter-group">
+                    <label><?php esc_html_e('Custom Range:', 'cig'); ?></label>
+                    <div class="cig-date-range">
+                        <input type="date" id="cig-fictive-date-from" class="cig-date-input" placeholder="<?php esc_attr_e('From', 'cig'); ?>">
+                        <span>-</span>
+                        <input type="date" id="cig-fictive-date-to" class="cig-date-input" placeholder="<?php esc_attr_e('To', 'cig'); ?>">
+                        <button type="button" id="cig-fictive-apply-date-range" class="button button-primary"><?php esc_html_e('Apply', 'cig'); ?></button>
+                    </div>
+                </div>
+
+                <div class="cig-filter-group">
+                    <label for="cig-fictive-search"><?php esc_html_e('Search:', 'cig'); ?></label>
+                    <input type="text" id="cig-fictive-search" class="cig-search-input" placeholder="<?php esc_attr_e('Search Invoice #, Client Name, or Tax ID', 'cig'); ?>" style="min-width:250px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Fictive Summary Cards -->
+        <div class="cig-stats-summary" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+            
+            <div class="cig-stat-card cig-fictive-card" id="cig-card-fictive-invoices" data-dropdown="fictive-invoices" data-method="all">
+                <div class="cig-stat-icon" style="background:#6c757d;">
+                    <span class="dashicons dashicons-media-spreadsheet"></span>
+                </div>
+                <div class="cig-stat-content">
+                    <div class="cig-stat-label"><?php esc_html_e('Total Fictive Invoices', 'cig'); ?></div>
+                    <div class="cig-stat-value" id="stat-fictive-invoices"><span class="loading-stat">...</span></div>
+                    <div class="cig-stat-trend"><?php esc_html_e('Click to view invoices', 'cig'); ?></div>
+                </div>
+            </div>
+
+            <div class="cig-stat-card cig-fictive-card" id="cig-card-fictive-amount" data-dropdown="fictive-invoices" data-method="all">
+                <div class="cig-stat-icon" style="background:#343a40;">
+                    <span class="dashicons dashicons-chart-bar"></span>
+                </div>
+                <div class="cig-stat-content">
+                    <div class="cig-stat-label"><?php esc_html_e('Total Fictive Amount', 'cig'); ?></div>
+                    <div class="cig-stat-value" id="stat-fictive-amount"><span class="loading-stat">...</span></div>
+                    <div class="cig-stat-trend"><?php esc_html_e('Click to view invoices', 'cig'); ?></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Fictive Invoices Drill-Down Table -->
+        <div class="cig-summary-dropdown" id="cig-summary-fictive-invoices" style="display:none;">
+            <div class="cig-summary-header">
+                <h3 id="cig-summary-fictive-title"><?php esc_html_e('Fictive Invoices', 'cig'); ?></h3>
+                <button type="button" class="button cig-summary-close" data-target="#cig-summary-fictive-invoices">✕</button>
+            </div>
+            <div class="cig-summary-body">
+                <div class="cig-table-container">
+                    <table class="cig-stats-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e('Invoice #', 'cig'); ?></th>
+                                <th><?php esc_html_e('Customer', 'cig'); ?></th>
+                                <th><?php esc_html_e('Total', 'cig'); ?></th>
+                                <th><?php esc_html_e('Date', 'cig'); ?></th>
+                                <th><?php esc_html_e('Author', 'cig'); ?></th>
+                                <th><?php esc_html_e('Actions', 'cig'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cig-summary-fictive-invoices-tbody">
+                            <tr class="loading-row">
+                                <td colspan="6"><div class="cig-loading-spinner"><div class="spinner"></div><p><?php esc_html_e('Loading...', 'cig'); ?></p></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

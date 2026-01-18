@@ -85,6 +85,9 @@ final class CIG_Invoice_Generator {
     // New Component
     public $user_restrictions;
     
+    // Admin Portal
+    public $admin_portal;
+    
     // Services (4.0.0)
     public $invoice_service;
     
@@ -175,6 +178,9 @@ final class CIG_Invoice_Generator {
         
         // Load User Restrictions
         require_once CIG_INCLUDES_DIR . 'class-cig-user-restrictions.php';
+        
+        // Load Admin Portal
+        require_once CIG_INCLUDES_DIR . 'class-cig-admin-portal.php';
     }
 
     /**
@@ -225,6 +231,9 @@ final class CIG_Invoice_Generator {
         
         // Init User Restrictions
         $this->user_restrictions = new CIG_User_Restrictions();
+        
+        // Init Admin Portal
+        $this->admin_portal = new CIG_Admin_Portal();
         
         // Init Migrator (4.0.0) - handles admin notices for migration
         $this->migrator = new CIG_Migrator();

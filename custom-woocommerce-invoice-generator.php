@@ -232,8 +232,9 @@ final class CIG_Invoice_Generator {
         // Init User Restrictions
         $this->user_restrictions = new CIG_User_Restrictions();
         
-        // Init Admin Portal
-        $this->admin_portal = new CIG_Admin_Portal();
+        // Init Admin Portal with database dependency
+        global $wpdb;
+        $this->admin_portal = new CIG_Admin_Portal( $wpdb );
         
         // Init Migrator (4.0.0) - handles admin notices for migration
         $this->migrator = new CIG_Migrator();

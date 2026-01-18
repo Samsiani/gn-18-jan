@@ -14,9 +14,19 @@ if (!defined('ABSPATH')) {
 class CIG_Admin_Portal {
 
     /**
-     * Constructor
+     * Database instance
+     *
+     * @var mixed
      */
-    public function __construct() {
+    private $db;
+
+    /**
+     * Constructor
+     *
+     * @param mixed $db Database instance for dependency injection
+     */
+    public function __construct( $db = null ) {
+        $this->db = $db;
         add_shortcode('cig_admin_portal', [$this, 'render_shortcode']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
     }

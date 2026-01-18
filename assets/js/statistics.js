@@ -801,7 +801,11 @@ jQuery(function ($) {
   // --- OVERVIEW LOGIC ---
 
   function handleQuickFilter() {
-    $('.cig-quick-filter-btn').removeClass('active');
+    // Skip if this is a Fictive tab quick filter button (has its own handler)
+    if ($(this).hasClass('cig-fictive-quick-filter-btn')) {
+      return;
+    }
+    $('.cig-quick-filter-btn:not(.cig-fictive-quick-filter-btn)').removeClass('active');
     $(this).addClass('active');
     var filter = $(this).data('filter');
     var today = new Date();

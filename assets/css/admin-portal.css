@@ -1,0 +1,345 @@
+/**
+ * Admin Portal Styles
+ * Frontend dashboard styling for CIG Admin Portal
+ *
+ * @package CIG
+ * @since 4.5.0
+ */
+
+/* Admin Portal Custom Styles */
+.cig-admin-portal-wrapper {
+    max-width: 100%;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* Navigation Cards Grid */
+.cig-portal-nav-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.cig-portal-card {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.cig-portal-card:hover {
+    border-color: #50529d;
+    box-shadow: 0 4px 12px rgba(80, 82, 157, 0.2);
+    transform: translateY(-2px);
+}
+
+.cig-portal-card.active {
+    background: linear-gradient(135deg, #50529d 0%, #6c6eb5 100%);
+    border-color: #50529d;
+    color: #fff;
+}
+
+.cig-portal-card .dashicons {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+}
+
+.cig-portal-card.active .dashicons {
+    color: #fff;
+}
+
+.cig-card-label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Content Area */
+.cig-portal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.cig-portal-tab {
+    animation: cig-portal-fadeIn 0.3s ease;
+}
+
+/* Hidden tabs */
+.cig-portal-tab:not(.active) {
+    display: none;
+}
+
+@keyframes cig-portal-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Table Styles */
+.cig-portal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.cig-portal-table th,
+.cig-portal-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.cig-portal-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.cig-portal-table tr:hover {
+    background: #f8f9fa;
+}
+
+.cig-portal-table .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.cig-portal-table .status-publish {
+    background: #d4edda;
+    color: #155724;
+}
+
+.cig-portal-table .status-draft {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.cig-portal-section-title {
+    font-size: 20px;
+    color: #50529d;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #50529d;
+}
+
+.cig-portal-view-link {
+    color: #50529d;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.cig-portal-view-link:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cig-portal-nav-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .cig-portal-card {
+        padding: 15px 10px;
+    }
+    
+    .cig-portal-card .dashicons {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+    }
+    
+    .cig-card-label {
+        font-size: 12px;
+    }
+    
+    .cig-portal-content {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cig-portal-nav-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Reset some admin styles for frontend */
+.cig-admin-portal-wrapper .wrap {
+    margin: 0;
+    padding: 0;
+}
+
+.cig-admin-portal-wrapper .wp-heading-inline {
+    font-size: 18px;
+}
+
+/* Stock Requests frontend adjustments */
+.cig-stock-requests-frontend {
+    padding: 0;
+}
+
+.cig-stock-requests-frontend h1.wp-heading-inline {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.cig-stock-requests-frontend .nav-tab-wrapper {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.cig-stock-requests-frontend .nav-tab {
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #555;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: transparent;
+    margin-bottom: -1px;
+}
+
+.cig-stock-requests-frontend .nav-tab-active {
+    background: #fff;
+    border-color: #ddd;
+    border-bottom-color: #fff;
+    color: #50529d;
+}
+
+.cig-stock-requests-frontend .wp-list-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cig-stock-requests-frontend .wp-list-table th,
+.cig-stock-requests-frontend .wp-list-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.cig-stock-requests-frontend .wp-list-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.cig-stock-requests-frontend .button {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #50529d;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.cig-stock-requests-frontend .button:hover {
+    background: #3f417a;
+}
+
+.cig-stock-requests-frontend .button-secondary {
+    background: #6c757d;
+}
+
+.cig-stock-requests-frontend .button-secondary:hover {
+    background: #5a6268;
+}
+
+/* Statistics frontend adjustments */
+.cig-statistics-wrap {
+    padding: 0;
+}
+
+.cig-statistics-wrap .cig-stats-main-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+/* Make accountant styles work on frontend */
+.cig-accountant-wrapper {
+    font-family: inherit;
+}
+
+/* Tab panel notice styling */
+.cig-portal-tab .notice {
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-left: 4px solid #50529d;
+    background: #f9f9f9;
+}
+
+.cig-portal-tab .notice-info {
+    border-left-color: #17a2b8;
+}
+
+/* Pagination styling for frontend */
+.cig-admin-portal-wrapper .tablenav-pages {
+    margin: 20px 0;
+    text-align: right;
+}
+
+.cig-admin-portal-wrapper .tablenav-pages a,
+.cig-admin-portal-wrapper .tablenav-pages span {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 2px;
+    background: #f0f0f1;
+    color: #50529d;
+    text-decoration: none;
+    border-radius: 3px;
+}
+
+.cig-admin-portal-wrapper .tablenav-pages a:hover {
+    background: #50529d;
+    color: #fff;
+}
+
+.cig-admin-portal-wrapper .tablenav-pages .current {
+    background: #50529d;
+    color: #fff;
+}
+
+/* Loading state */
+.cig-portal-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.cig-portal-loading .spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #50529d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Print styles */
+@media print {
+    .cig-portal-nav-cards {
+        display: none;
+    }
+    
+    .cig-portal-content {
+        box-shadow: none;
+        border: none;
+    }
+}

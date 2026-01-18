@@ -21,7 +21,7 @@ jQuery(function($) {
         } else {
             $bar.fadeOut(200);
             // Hide accordion when cart is empty
-            $('.cig-cart-list-wrapper').slideUp(200);
+            $('.cig-cart-list-wrapper').fadeOut(200);
             $('#cig-cart-toggle').removeClass('expanded');
         }
 
@@ -133,10 +133,10 @@ jQuery(function($) {
         var $toggle = $(this);
         
         if ($wrapper.is(':visible')) {
-            $wrapper.slideUp(200);
+            $wrapper.fadeOut(200);
             $toggle.removeClass('expanded');
         } else {
-            $wrapper.slideDown(200);
+            $wrapper.fadeIn(200);
             $toggle.addClass('expanded');
         }
     });

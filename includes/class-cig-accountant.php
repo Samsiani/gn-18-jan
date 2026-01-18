@@ -205,6 +205,7 @@ class CIG_Accountant {
                         <th><?php esc_html_e('Client', 'cig'); ?></th> <th><?php esc_html_e('Payment', 'cig'); ?></th>
                         <th><?php esc_html_e('Total', 'cig'); ?></th>
                         <th style="text-align:center;"><?php esc_html_e('RS', 'cig'); ?></th>
+                        <th style="text-align:center;"><?php esc_html_e('Credit', 'cig'); ?></th>
                         <th style="text-align:center;"><?php esc_html_e('Receipt', 'cig'); ?></th>
                         <th style="text-align:center;"><?php esc_html_e('Corrected', 'cig'); ?></th>
                         <th><?php esc_html_e('Consultant Note', 'cig'); ?></th>
@@ -261,6 +262,7 @@ class CIG_Accountant {
                             // Statuses (checking is_rs_uploaded from custom table, fallback to meta for acc_status)
                             $st = get_post_meta($post_id, '_cig_acc_status', true);
                             $is_rs = ($st === 'rs') || !empty($invoice['is_rs_uploaded']);
+                            $is_credit = ($st === 'credit');
                             $is_corrected = ($st === 'corrected') || (get_post_meta($post_id, '_cig_accountant_is_corrected', true) === 'yes');
                             $is_receipt = ($st === 'receipt') || (get_post_meta($post_id, '_cig_acc_full_check', true) === 'yes');
                             
@@ -315,6 +317,7 @@ class CIG_Accountant {
                             
                             // Statuses
                             echo '<td style="text-align:center;">' . ($is_rs ? '<span class="dashicons dashicons-cloud-saved" style="color:#28a745;" title="Uploaded"></span>' : '—') . '</td>';
+                            echo '<td style="text-align:center;">' . ($is_credit ? '<span class="dashicons dashicons-calendar-alt" style="color:#6c757d;" title="Credit / Installment"></span>' : '—') . '</td>';
                             echo '<td style="text-align:center;">' . ($is_receipt ? '<span class="dashicons dashicons-yes-alt" style="color:#28a745;" title="Checked"></span>' : '—') . '</td>';
                             echo '<td style="text-align:center;">' . ($is_corrected ? '<span class="dashicons dashicons-warning" style="color:#f39c12;" title="Corrected"></span>' : '—') . '</td>';
                             
@@ -326,7 +329,7 @@ class CIG_Accountant {
                             echo '</tr>';
                         }
                     } else {
-                        echo '<tr><td colspan="12">' . esc_html__('No relevant invoices found.', 'cig') . '</td></tr>';
+                        echo '<tr><td colspan="13">' . esc_html__('No relevant invoices found.', 'cig') . '</td></tr>';
                     }
                     wp_reset_postdata();
                     ?>

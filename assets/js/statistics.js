@@ -32,6 +32,17 @@ jQuery(function ($) {
   // Fictive Invoices Tab Variables
   var fictiveFilters = { dateFrom: '', dateTo: '', search: '' };
 
+  // Users Section Filters (Independent from global currentFilters)
+  var usersSectionFilters = { dateFrom: '', dateTo: '', search: '' };
+  var usersSectionSearchTimeout = null;
+
+  // Fictive Users Section Variables
+  var fictiveUsersFilters = { dateFrom: '', dateTo: '', search: '' };
+  var fictiveUsersData = [];
+  var fictiveUsersPagination = { current_page: 1, per_page: 20, total_pages: 1 };
+  var fictiveUsersSort = { column: 'invoice_count', order: 'desc' };
+  var fictiveUsersSearchTimeout = null;
+
   // Product Performance Table Variables
   var productPerfFilters = { dateFrom: '', dateTo: '', search: '' };
   var productPerfData = [];
@@ -84,6 +95,10 @@ jQuery(function ($) {
             loadProductTable();
         } else if (tab === 'fictive') {
             loadFictiveStatistics(true);
+            // Load Fictive Users data only on first click or if table shows loading
+            if ($('#cig-fictive-users-tbody tr.loading-row').length > 0) {
+                loadFictiveUsers(true);
+            }
         }
     });
 
@@ -107,6 +122,7 @@ jQuery(function ($) {
       } else if (tab === 'fictive') {
           clearFictiveDropdown();
           loadFictiveStatistics(true);
+          loadFictiveUsers(true);
       } else if (tab === 'customer') {
           loadCustomers();
       } else if (tab === 'external') {
@@ -135,7 +151,7 @@ jQuery(function ($) {
       clearTimeout(searchTimeout);
       var term = $(this).val();
       searchTimeout = setTimeout(function() {
-        currentFilters.search = term;
+        usersSectionFilters.search = term;
         filterUsers();
       }, 300);
     });
@@ -155,6 +171,58 @@ jQuery(function ($) {
     });
 
     $(document).on('click', '#cig-users-table .sortable', handleSort);
+
+    // --- USERS SECTION INDEPENDENT FILTERS ---
+    // Quick Filter Buttons for Users Section
+    $(document).on('click', '.cig-users-quick-filter-btn', handleUsersQuickFilter);
+    
+    // Custom Date Range Apply Button for Users Section
+    $(document).on('click', '#cig-users-apply-date-range', function() {
+        usersSectionFilters.dateFrom = $('#cig-users-date-from').val();
+        usersSectionFilters.dateTo = $('#cig-users-date-to').val();
+        if (!usersSectionFilters.dateFrom || !usersSectionFilters.dateTo) {
+            alert('Please select both dates');
+            return;
+        }
+        $('.cig-users-quick-filter-btn').removeClass('active');
+        loadUsers(true);
+    });
+
+    // --- FICTIVE USERS SECTION EVENTS ---
+    // Quick Filter Buttons for Fictive Users Section
+    $(document).on('click', '.cig-fictive-users-quick-filter-btn', handleFictiveUsersQuickFilter);
+    
+    // Custom Date Range Apply Button for Fictive Users Section
+    $(document).on('click', '#cig-fictive-users-apply-date-range', function() {
+        fictiveUsersFilters.dateFrom = $('#cig-fictive-users-date-from').val();
+        fictiveUsersFilters.dateTo = $('#cig-fictive-users-date-to').val();
+        if (!fictiveUsersFilters.dateFrom || !fictiveUsersFilters.dateTo) {
+            alert('Please select both dates');
+            return;
+        }
+        $('.cig-fictive-users-quick-filter-btn').removeClass('active');
+        loadFictiveUsers(true);
+    });
+    
+    // Search Input for Fictive Users Section
+    $(document).on('input', '#cig-fictive-user-search', function() {
+        clearTimeout(fictiveUsersSearchTimeout);
+        var term = $(this).val();
+        fictiveUsersSearchTimeout = setTimeout(function() {
+            fictiveUsersFilters.search = term;
+            filterFictiveUsers();
+        }, 300);
+    });
+    
+    // Per Page Selector for Fictive Users Section
+    $(document).on('change', '#cig-fictive-users-per-page', function() {
+        fictiveUsersPagination.per_page = parseInt($(this).val(), 10);
+        fictiveUsersPagination.current_page = 1;
+        displayFictiveUsersPage();
+    });
+    
+    // Sortable Headers for Fictive Users Table
+    $(document).on('click', '#cig-fictive-users-table .sortable', handleFictiveUsersSort);
 
     // --- USER DETAIL VIEW ---
     $(document).on('click', '#cig-back-to-users', function() {
@@ -193,6 +261,9 @@ jQuery(function ($) {
       } else if ($(this).closest('#cig-invoices-pagination').length) {
         invoicesPagination.current_page = page;
         displayInvoicesPage();
+      } else if ($(this).closest('#cig-fictive-users-pagination').length) {
+        fictiveUsersPagination.current_page = page;
+        displayFictiveUsersPage();
       } else if ($(this).hasClass('cig-cust-page-btn')) { // Customer Pagination
         custPagination.current_page = page;
         loadCustomers();
@@ -805,7 +876,15 @@ jQuery(function ($) {
     if ($(this).hasClass('cig-fictive-quick-filter-btn')) {
       return;
     }
-    $('.cig-quick-filter-btn:not(.cig-fictive-quick-filter-btn)').removeClass('active');
+    // Skip if this is a Users section quick filter button (has its own handler)
+    if ($(this).hasClass('cig-users-quick-filter-btn')) {
+      return;
+    }
+    // Skip if this is a Fictive Users section quick filter button (has its own handler)
+    if ($(this).hasClass('cig-fictive-users-quick-filter-btn')) {
+      return;
+    }
+    $('.cig-quick-filter-btn:not(.cig-fictive-quick-filter-btn):not(.cig-users-quick-filter-btn):not(.cig-fictive-users-quick-filter-btn)').removeClass('active');
     $(this).addClass('active');
     var filter = $(this).data('filter');
     var today = new Date();
@@ -819,7 +898,53 @@ jQuery(function ($) {
     }
     $('#cig-date-from').val(from); $('#cig-date-to').val(to);
     currentFilters.date_from = from; currentFilters.date_to = to;
-    clearSummaryDropdowns(); hideUserDetail(); loadStatistics(true);
+    clearSummaryDropdowns(); hideUserDetail(); loadSummary(true);
+  }
+
+  /**
+   * Handle Quick Filter Button Click for Users Section (General Overview)
+   */
+  function handleUsersQuickFilter() {
+    $('.cig-users-quick-filter-btn').removeClass('active');
+    $(this).addClass('active');
+    var filter = $(this).data('filter');
+    var today = new Date();
+    var from = '', to = '';
+    switch(filter) {
+      case 'today': from = to = formatDate(today); break;
+      case 'this_week': var ws = new Date(today); ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); from = formatDate(ws); to = formatDate(today); break;
+      case 'this_month': from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); to = formatDate(today); break;
+      case 'last_30_days': var p30 = new Date(today); p30.setDate(today.getDate() - 30); from = formatDate(p30); to = formatDate(today); break;
+      case 'all_time': from = ''; to = ''; break;
+    }
+    $('#cig-users-date-from').val(from);
+    $('#cig-users-date-to').val(to);
+    usersSectionFilters.dateFrom = from;
+    usersSectionFilters.dateTo = to;
+    loadUsers(true);
+  }
+
+  /**
+   * Handle Quick Filter Button Click for Fictive Users Section
+   */
+  function handleFictiveUsersQuickFilter() {
+    $('.cig-fictive-users-quick-filter-btn').removeClass('active');
+    $(this).addClass('active');
+    var filter = $(this).data('filter');
+    var today = new Date();
+    var from = '', to = '';
+    switch(filter) {
+      case 'today': from = to = formatDate(today); break;
+      case 'this_week': var ws = new Date(today); ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); from = formatDate(ws); to = formatDate(today); break;
+      case 'this_month': from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); to = formatDate(today); break;
+      case 'last_30_days': var p30 = new Date(today); p30.setDate(today.getDate() - 30); from = formatDate(p30); to = formatDate(today); break;
+      case 'all_time': from = ''; to = ''; break;
+    }
+    $('#cig-fictive-users-date-from').val(from);
+    $('#cig-fictive-users-date-to').val(to);
+    fictiveUsersFilters.dateFrom = from;
+    fictiveUsersFilters.dateTo = to;
+    loadFictiveUsers(true);
   }
 
   function applyCustomDateRange() {
@@ -926,7 +1051,7 @@ jQuery(function ($) {
     if (force) { $('#cig-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading users...</p></div></td></tr>'); }
     $.ajax({
       url: cigStats.ajax_url, method: 'POST', dataType: 'json',
-      data: { action: 'cig_get_users_statistics', nonce: cigStats.nonce, date_from: currentFilters.date_from, date_to: currentFilters.date_to, search: currentFilters.search, sort_by: currentSort.column, sort_order: currentSort.order, status: 'standard' },
+      data: { action: 'cig_get_users_statistics', nonce: cigStats.nonce, date_from: usersSectionFilters.dateFrom, date_to: usersSectionFilters.dateTo, search: usersSectionFilters.search, sort_by: currentSort.column, sort_order: currentSort.order, status: 'standard' },
       success: function(res) { if (res && res.success && res.data) { usersData = res.data.users; filterUsers(); } else { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>'); } },
       error: function() { $('#cig-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">Error loading users</td></tr>'); }
     });
@@ -934,7 +1059,7 @@ jQuery(function ($) {
 
   function filterUsers() {
     var filtered = usersData;
-    if (currentFilters.search) { var term = currentFilters.search.toLowerCase(); filtered = usersData.filter(function(u){ return u.user_name.toLowerCase().includes(term) || u.user_email.toLowerCase().includes(term); }); }
+    if (usersSectionFilters.search) { var term = usersSectionFilters.search.toLowerCase(); filtered = usersData.filter(function(u){ return u.user_name.toLowerCase().includes(term) || u.user_email.toLowerCase().includes(term); }); }
     usersPagination.current_page = 1;
     usersPagination.total_pages = Math.ceil(filtered.length / usersPagination.per_page);
     displayUsersPage(filtered);
@@ -969,6 +1094,170 @@ jQuery(function ($) {
   }
   function sortUsers() { usersData.sort(function(a,b){ var aVal = a[currentSort.column]; var bVal = b[currentSort.column]; if (currentSort.order === 'asc') return aVal > bVal ? 1 : -1; return aVal < bVal ? 1 : -1; }); displayUsersPage(); }
   function updateSortArrows() { $('#cig-users-table .sortable').removeClass('active-sort').removeAttr('data-order'); var $active = $('#cig-users-table .sortable[data-sort="' + currentSort.column + '"]'); $active.addClass('active-sort').attr('data-order', currentSort.order); }
+
+  // --- FICTIVE USERS SECTION LOGIC ---
+  
+  /**
+   * Load Fictive Users Statistics
+   * Calls cig_get_users_statistics with status='fictive'
+   */
+  function loadFictiveUsers(force) {
+    if (force) {
+      $('#cig-fictive-users-tbody').html('<tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p>Loading users...</p></div></td></tr>');
+    }
+    $.ajax({
+      url: cigStats.ajax_url,
+      method: 'POST',
+      dataType: 'json',
+      data: {
+        action: 'cig_get_users_statistics',
+        nonce: cigStats.nonce,
+        date_from: fictiveUsersFilters.dateFrom,
+        date_to: fictiveUsersFilters.dateTo,
+        search: fictiveUsersFilters.search,
+        sort_by: fictiveUsersSort.column,
+        sort_order: fictiveUsersSort.order,
+        status: 'fictive' // CRUCIAL: Always 'fictive' for this section
+      },
+      success: function(res) {
+        if (res && res.success && res.data) {
+          fictiveUsersData = res.data.users;
+          filterFictiveUsers();
+        } else {
+          $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>');
+        }
+      },
+      error: function() {
+        $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7" style="color:#dc3545;">Error loading users</td></tr>');
+      }
+    });
+  }
+
+  /**
+   * Filter Fictive Users client-side by search term
+   */
+  function filterFictiveUsers() {
+    var filtered = fictiveUsersData;
+    if (fictiveUsersFilters.search) {
+      var term = fictiveUsersFilters.search.toLowerCase();
+      filtered = fictiveUsersData.filter(function(u) {
+        return u.user_name.toLowerCase().includes(term) || u.user_email.toLowerCase().includes(term);
+      });
+    }
+    fictiveUsersPagination.current_page = 1;
+    fictiveUsersPagination.total_pages = Math.ceil(filtered.length / fictiveUsersPagination.per_page);
+    displayFictiveUsersPage(filtered);
+  }
+
+  /**
+   * Display Fictive Users Page
+   */
+  function displayFictiveUsersPage(filtered) {
+    filtered = filtered || fictiveUsersData;
+    fictiveUsersPagination.total_pages = Math.ceil(filtered.length / fictiveUsersPagination.per_page);
+    var start = (fictiveUsersPagination.current_page - 1) * fictiveUsersPagination.per_page;
+    var end = start + fictiveUsersPagination.per_page;
+    var pageData = filtered.slice(start, end);
+    
+    if (!pageData.length) {
+      $('#cig-fictive-users-tbody').html('<tr class="no-results-row"><td colspan="7">No users found</td></tr>');
+      $('#cig-fictive-users-pagination').html('');
+      return;
+    }
+    
+    var html = '';
+    pageData.forEach(function(user) {
+      html += '<tr class="cig-fictive-user-row" data-user-id="' + user.user_id + '">';
+      html += '<td><div class="user-cell"><img src="' + user.user_avatar + '" alt="" class="user-avatar"><div class="user-info"><div class="user-name">' + escapeHtml(user.user_name) + '</div><div class="user-email">' + escapeHtml(user.user_email) + '</div></div></div></td>';
+      html += '<td><strong>' + user.invoice_count + '</strong></td>';
+      html += '<td><span class="cig-badge badge-sold">' + formatNumber(user.total_sold) + '</span></td>';
+      html += '<td><span class="cig-badge badge-reserved">' + formatNumber(user.total_reserved) + '</span></td>';
+      html += '<td><span class="cig-badge badge-canceled">' + formatNumber(user.total_canceled) + '</span></td>';
+      html += '<td><strong>' + formatCurrency(user.total_revenue) + '</strong></td>';
+      html += '<td>' + formatDateTime(user.last_invoice_date) + '</td>';
+      html += '</tr>';
+    });
+    
+    $('#cig-fictive-users-tbody').html(html);
+    renderFictiveUsersPagination();
+    updateFictiveUsersSortArrows();
+  }
+
+  /**
+   * Render Fictive Users Pagination
+   */
+  function renderFictiveUsersPagination() {
+    var $container = $('#cig-fictive-users-pagination');
+    var cp = fictiveUsersPagination.current_page;
+    var tp = fictiveUsersPagination.total_pages;
+
+    if (tp <= 1) {
+      $container.html('');
+      return;
+    }
+
+    var html = '<button class="cig-page-btn" data-page="' + (cp - 1) + '" ' + (cp <= 1 ? 'disabled' : '') + '>« Prev</button>';
+    
+    var startPage = Math.max(1, cp - 2);
+    var endPage = Math.min(tp, cp + 2);
+    
+    if (startPage > 1) {
+      html += '<button class="cig-page-btn" data-page="1">1</button>';
+      if (startPage > 2) html += '<span style="padding:0 5px;color:#999;">...</span>';
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+      html += '<button class="cig-page-btn ' + (i === cp ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+    }
+    
+    if (endPage < tp) {
+      if (endPage < tp - 1) html += '<span style="padding:0 5px;color:#999;">...</span>';
+      html += '<button class="cig-page-btn" data-page="' + tp + '">' + tp + '</button>';
+    }
+    
+    html += '<button class="cig-page-btn" data-page="' + (cp + 1) + '" ' + (cp >= tp ? 'disabled' : '') + '>Next »</button>';
+    
+    $container.html(html);
+  }
+
+  /**
+   * Handle Sort for Fictive Users Table
+   */
+  function handleFictiveUsersSort() {
+    var column = $(this).data('sort');
+    if (fictiveUsersSort.column === column) {
+      fictiveUsersSort.order = fictiveUsersSort.order === 'asc' ? 'desc' : 'asc';
+    } else {
+      fictiveUsersSort.column = column;
+      fictiveUsersSort.order = 'desc';
+    }
+    sortFictiveUsers();
+    updateFictiveUsersSortArrows();
+  }
+
+  /**
+   * Sort Fictive Users client-side
+   */
+  function sortFictiveUsers() {
+    fictiveUsersData.sort(function(a, b) {
+      var aVal = a[fictiveUsersSort.column];
+      var bVal = b[fictiveUsersSort.column];
+      if (fictiveUsersSort.order === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      }
+      return aVal < bVal ? 1 : -1;
+    });
+    displayFictiveUsersPage();
+  }
+
+  /**
+   * Update Sort Arrows for Fictive Users Table
+   */
+  function updateFictiveUsersSortArrows() {
+    $('#cig-fictive-users-table .sortable').removeClass('active-sort').removeAttr('data-order');
+    var $active = $('#cig-fictive-users-table .sortable[data-sort="' + fictiveUsersSort.column + '"]');
+    $active.addClass('active-sort').attr('data-order', fictiveUsersSort.order);
+  }
 
   function showUserDetail(userId) {
     var user = usersData.find(function(u){ return u.user_id == userId; });

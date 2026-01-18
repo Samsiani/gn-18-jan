@@ -16,14 +16,14 @@ class CIG_Admin_Portal {
     /**
      * Database instance
      *
-     * @var mixed
+     * @var wpdb|null
      */
     private $db;
 
     /**
      * Constructor
      *
-     * @param mixed $db Database instance for dependency injection
+     * @param wpdb|null $db Database instance for dependency injection
      */
     public function __construct( $db = null ) {
         $this->db = $db;

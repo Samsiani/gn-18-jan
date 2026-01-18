@@ -39,6 +39,56 @@ class CIG_Invoice_Manager {
         $this->table_items     = $wpdb->prefix . 'cig_invoice_items';
         $this->table_payments  = $wpdb->prefix . 'cig_payments';
         $this->table_customers = $wpdb->prefix . 'cig_customers';
+
+        // Hook into WordPress post deletion to cascade delete custom table data
+        add_action('before_delete_post', [$this, 'handle_wp_post_deletion']);
+    }
+
+    /**
+     * Handle WordPress post deletion - cascade delete to custom tables
+     *
+     * When an invoice post is deleted from WordPress, this method ensures
+     * the corresponding data in custom tables (cig_invoices, cig_invoice_items,
+     * cig_payments) is also deleted to prevent orphaned data.
+     *
+     * @since 4.0.0
+     * @param int $post_id WordPress post ID being deleted
+     * @return void
+     */
+    public function handle_wp_post_deletion($post_id) {
+        // Step 1: Validation - only process 'invoice' post type
+        if (get_post_type($post_id) !== 'invoice') {
+            return;
+        }
+
+        // Step 2: Retrieve the internal custom table ID
+        $invoice_number = get_post_meta($post_id, '_cig_invoice_number', true);
+        if (empty($invoice_number)) {
+            return;
+        }
+
+        $invoice_data = $this->get_invoice_by_number($invoice_number);
+        if (!$invoice_data) {
+            return;
+        }
+
+        $internal_id = intval($invoice_data['invoice']['id']);
+        if ($internal_id <= 0) {
+            return;
+        }
+
+        // Step 3: Execute deletion using existing delete_invoice method
+        $this->delete_invoice($internal_id);
+
+        // Step 4: Clear relevant cache
+        if (class_exists('CIG_Cache')) {
+            $cache = new CIG_Cache();
+            $cache->delete('statistics_summary');
+            $author_id = get_post_field('post_author', $post_id);
+            if ($author_id) {
+                $cache->delete('user_invoices_' . $author_id);
+            }
+        }
     }
 
     /**

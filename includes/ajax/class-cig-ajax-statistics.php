@@ -339,13 +339,12 @@ class CIG_Ajax_Statistics {
         }
 
         // Build SQL query for user statistics
-        // For last_invoice_date, use created_at for fictive invoices, sale_date for standard
-        $last_date_column = ($status === 'fictive') ? 'i.created_at' : 'i.sale_date';
+        // For last_invoice_date, use the same date column as filtering
         $sql = "SELECT 
             i.author_id,
             COUNT(DISTINCT i.id) as invoice_count,
             COALESCE(SUM(i.total_amount), 0) as total_revenue,
-            MAX({$last_date_column}) as last_invoice_date
+            MAX({$date_column}) as last_invoice_date
             FROM {$this->table_invoices} i 
             {$where}
             GROUP BY i.author_id";

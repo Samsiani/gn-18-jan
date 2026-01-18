@@ -274,6 +274,31 @@ if (!defined('ABSPATH')) {
                         </select>
                     </div>
                 </div>
+                <!-- Users Section Date Filter Bar -->
+                <div class="cig-stats-filters-bar" style="margin-bottom: 15px;">
+                    <div class="cig-filters-row">
+                        <div class="cig-filter-group">
+                            <label><?php esc_html_e('Quick Filters:', 'cig'); ?></label>
+                            <div class="cig-quick-filters">
+                                <button type="button" class="cig-quick-filter-btn cig-users-quick-filter-btn" id="cig-users-filter-today" data-filter="today"><?php esc_html_e('Today', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-users-quick-filter-btn" id="cig-users-filter-this-week" data-filter="this_week"><?php esc_html_e('This Week', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-users-quick-filter-btn" id="cig-users-filter-this-month" data-filter="this_month"><?php esc_html_e('This Month', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-users-quick-filter-btn" id="cig-users-filter-last-30-days" data-filter="last_30_days"><?php esc_html_e('Last 30 Days', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-users-quick-filter-btn active" id="cig-users-filter-all-time" data-filter="all_time"><?php esc_html_e('All Time', 'cig'); ?></button>
+                            </div>
+                        </div>
+
+                        <div class="cig-filter-group">
+                            <label><?php esc_html_e('Custom Range:', 'cig'); ?></label>
+                            <div class="cig-date-range">
+                                <input type="date" id="cig-users-date-from" class="cig-date-input" placeholder="<?php esc_attr_e('From', 'cig'); ?>">
+                                <span>-</span>
+                                <input type="date" id="cig-users-date-to" class="cig-date-input" placeholder="<?php esc_attr_e('To', 'cig'); ?>">
+                                <button type="button" id="cig-users-apply-date-range" class="button button-primary"><?php esc_html_e('Apply', 'cig'); ?></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="cig-table-container">
                     <table class="cig-stats-table" id="cig-users-table">
                         <thead>
@@ -431,6 +456,69 @@ if (!defined('ABSPATH')) {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fictive Performance by User Section -->
+        <div class="cig-stats-grid" style="grid-template-columns: 100%; margin-top: 20px;">
+            <div class="cig-table-card" id="cig-fictive-users-panel" style="grid-column: 1 / -1;">
+                <div class="cig-section-header cig-users-header-inline">
+                    <h2><?php esc_html_e('Performance by User (Fictive)', 'cig'); ?></h2>
+                    <div class="cig-section-controls">
+                        <input type="text" id="cig-fictive-user-search" class="cig-search-input" placeholder="<?php esc_attr_e('Search users...', 'cig'); ?>">
+                        <select id="cig-fictive-users-per-page" class="cig-per-page-select">
+                            <option value="20">20 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Fictive Users Section Date Filter Bar -->
+                <div class="cig-stats-filters-bar" style="margin-bottom: 15px;">
+                    <div class="cig-filters-row">
+                        <div class="cig-filter-group">
+                            <label><?php esc_html_e('Quick Filters:', 'cig'); ?></label>
+                            <div class="cig-quick-filters">
+                                <button type="button" class="cig-quick-filter-btn cig-fictive-users-quick-filter-btn" id="cig-fictive-users-filter-today" data-filter="today"><?php esc_html_e('Today', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-fictive-users-quick-filter-btn" id="cig-fictive-users-filter-this-week" data-filter="this_week"><?php esc_html_e('This Week', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-fictive-users-quick-filter-btn" id="cig-fictive-users-filter-this-month" data-filter="this_month"><?php esc_html_e('This Month', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-fictive-users-quick-filter-btn" id="cig-fictive-users-filter-last-30-days" data-filter="last_30_days"><?php esc_html_e('Last 30 Days', 'cig'); ?></button>
+                                <button type="button" class="cig-quick-filter-btn cig-fictive-users-quick-filter-btn active" id="cig-fictive-users-filter-all-time" data-filter="all_time"><?php esc_html_e('All Time', 'cig'); ?></button>
+                            </div>
+                        </div>
+
+                        <div class="cig-filter-group">
+                            <label><?php esc_html_e('Custom Range:', 'cig'); ?></label>
+                            <div class="cig-date-range">
+                                <input type="date" id="cig-fictive-users-date-from" class="cig-date-input" placeholder="<?php esc_attr_e('From', 'cig'); ?>">
+                                <span>-</span>
+                                <input type="date" id="cig-fictive-users-date-to" class="cig-date-input" placeholder="<?php esc_attr_e('To', 'cig'); ?>">
+                                <button type="button" id="cig-fictive-users-apply-date-range" class="button button-primary"><?php esc_html_e('Apply', 'cig'); ?></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cig-table-container">
+                    <table class="cig-stats-table" id="cig-fictive-users-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="user_name"><?php esc_html_e('User', 'cig'); ?></th>
+                                <th class="sortable" data-sort="invoice_count"><?php esc_html_e('Invoices', 'cig'); ?></th>
+                                <th class="sortable" data-sort="total_sold"><?php esc_html_e('Sold', 'cig'); ?></th>
+                                <th class="sortable" data-sort="total_reserved"><?php esc_html_e('Reserved', 'cig'); ?></th>
+                                <th class="sortable" data-sort="total_canceled"><?php esc_html_e('Canceled', 'cig'); ?></th>
+                                <th class="sortable" data-sort="total_revenue"><?php esc_html_e('Revenue', 'cig'); ?></th>
+                                <th class="sortable" data-sort="last_invoice_date"><?php esc_html_e('Last Invoice', 'cig'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cig-fictive-users-tbody">
+                            <tr class="loading-row"><td colspan="7"><div class="cig-loading-spinner"><div class="spinner"></div><p><?php esc_html_e('Loading users...', 'cig'); ?></p></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="cig-table-footer">
+                    <div class="cig-pagination" id="cig-fictive-users-pagination"></div>
                 </div>
             </div>
         </div>

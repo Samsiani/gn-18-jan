@@ -242,7 +242,7 @@ jQuery(function($) {
         $(document).on('click', '.cig-qf-btn', function() {
             var range = $(this).data('range'); 
             $('.cig-qf-btn').removeClass('active'); $(this).addClass('active');
-            var from = '', to = ''; var today = new Date(); var fmt = function(d) { return d.toISOString().split('T')[0]; };
+            var from = '', to = ''; var today = new Date(); var fmt = function(d) { var year = d.getFullYear(); var month = String(d.getMonth() + 1).padStart(2, '0'); var day = String(d.getDate()).padStart(2, '0'); return year + '-' + month + '-' + day; };
             
             if (range === 'today') { from = fmt(today); to = fmt(today); }
             else if (range === 'yesterday') { var d = new Date(today); d.setDate(d.getDate() - 1); from = fmt(d); to = fmt(d); }

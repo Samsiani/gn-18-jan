@@ -110,7 +110,8 @@ jQuery(function ($) {
       currentFilters.payment_method = $(this).val();
       clearSummaryDropdowns();
       hideUserDetail();
-      loadStatistics(true);
+      loadSummary(true);
+      // Note: Users table has its own independent filters, payment filter only affects summary cards
     });
 
     $(document).on('click', '#cig-refresh-stats', function() {
@@ -578,37 +579,11 @@ jQuery(function ($) {
       $('.cig-fictive-quick-filter-btn').removeClass('active');
       $(this).addClass('active');
       var filter = $(this).data('filter');
-      var today = new Date();
-      var from = '', to = '';
-      switch(filter) {
-          case 'today': 
-              from = to = formatDate(today); 
-              break;
-          case 'this_week': 
-              var ws = new Date(today); 
-              ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); 
-              from = formatDate(ws); 
-              to = formatDate(today); 
-              break;
-          case 'this_month': 
-              from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); 
-              to = formatDate(today); 
-              break;
-          case 'last_30_days': 
-              var p30 = new Date(today); 
-              p30.setDate(today.getDate() - 30); 
-              from = formatDate(p30); 
-              to = formatDate(today); 
-              break;
-          case 'all_time': 
-              from = ''; 
-              to = ''; 
-              break;
-      }
-      $('#cig-fictive-date-from').val(from);
-      $('#cig-fictive-date-to').val(to);
-      fictiveFilters.dateFrom = from;
-      fictiveFilters.dateTo = to;
+      var dateRange = calculateDateRange(filter);
+      $('#cig-fictive-date-from').val(dateRange.from);
+      $('#cig-fictive-date-to').val(dateRange.to);
+      fictiveFilters.dateFrom = dateRange.from;
+      fictiveFilters.dateTo = dateRange.to;
       clearFictiveDropdown();
       loadFictiveStatistics(true);
   }
@@ -887,18 +862,11 @@ jQuery(function ($) {
     $('.cig-quick-filter-btn:not(.cig-fictive-quick-filter-btn):not(.cig-users-quick-filter-btn):not(.cig-fictive-users-quick-filter-btn)').removeClass('active');
     $(this).addClass('active');
     var filter = $(this).data('filter');
-    var today = new Date();
-    var from = '', to = '';
-    switch(filter) {
-      case 'today': from = to = formatDate(today); break;
-      case 'this_week': var ws = new Date(today); ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); from = formatDate(ws); to = formatDate(today); break;
-      case 'this_month': from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); to = formatDate(today); break;
-      case 'last_30_days': var p30 = new Date(today); p30.setDate(today.getDate() - 30); from = formatDate(p30); to = formatDate(today); break;
-      case 'all_time': from = ''; to = ''; break;
-    }
-    $('#cig-date-from').val(from); $('#cig-date-to').val(to);
-    currentFilters.date_from = from; currentFilters.date_to = to;
+    var dateRange = calculateDateRange(filter);
+    $('#cig-date-from').val(dateRange.from); $('#cig-date-to').val(dateRange.to);
+    currentFilters.date_from = dateRange.from; currentFilters.date_to = dateRange.to;
     clearSummaryDropdowns(); hideUserDetail(); loadSummary(true);
+    // Note: Users table now has its own independent filters, so we don't reload users here
   }
 
   /**
@@ -908,19 +876,11 @@ jQuery(function ($) {
     $('.cig-users-quick-filter-btn').removeClass('active');
     $(this).addClass('active');
     var filter = $(this).data('filter');
-    var today = new Date();
-    var from = '', to = '';
-    switch(filter) {
-      case 'today': from = to = formatDate(today); break;
-      case 'this_week': var ws = new Date(today); ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); from = formatDate(ws); to = formatDate(today); break;
-      case 'this_month': from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); to = formatDate(today); break;
-      case 'last_30_days': var p30 = new Date(today); p30.setDate(today.getDate() - 30); from = formatDate(p30); to = formatDate(today); break;
-      case 'all_time': from = ''; to = ''; break;
-    }
-    $('#cig-users-date-from').val(from);
-    $('#cig-users-date-to').val(to);
-    usersSectionFilters.dateFrom = from;
-    usersSectionFilters.dateTo = to;
+    var dateRange = calculateDateRange(filter);
+    $('#cig-users-date-from').val(dateRange.from);
+    $('#cig-users-date-to').val(dateRange.to);
+    usersSectionFilters.dateFrom = dateRange.from;
+    usersSectionFilters.dateTo = dateRange.to;
     loadUsers(true);
   }
 
@@ -931,19 +891,11 @@ jQuery(function ($) {
     $('.cig-fictive-users-quick-filter-btn').removeClass('active');
     $(this).addClass('active');
     var filter = $(this).data('filter');
-    var today = new Date();
-    var from = '', to = '';
-    switch(filter) {
-      case 'today': from = to = formatDate(today); break;
-      case 'this_week': var ws = new Date(today); ws.setDate(ws.getDate() + ((ws.getDay()===0 ? -6:1) - ws.getDay())); from = formatDate(ws); to = formatDate(today); break;
-      case 'this_month': from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); to = formatDate(today); break;
-      case 'last_30_days': var p30 = new Date(today); p30.setDate(today.getDate() - 30); from = formatDate(p30); to = formatDate(today); break;
-      case 'all_time': from = ''; to = ''; break;
-    }
-    $('#cig-fictive-users-date-from').val(from);
-    $('#cig-fictive-users-date-to').val(to);
-    fictiveUsersFilters.dateFrom = from;
-    fictiveUsersFilters.dateTo = to;
+    var dateRange = calculateDateRange(filter);
+    $('#cig-fictive-users-date-from').val(dateRange.from);
+    $('#cig-fictive-users-date-to').val(dateRange.to);
+    fictiveUsersFilters.dateFrom = dateRange.from;
+    fictiveUsersFilters.dateTo = dateRange.to;
     loadFictiveUsers(true);
   }
 
@@ -951,9 +903,10 @@ jQuery(function ($) {
     var from = $('#cig-date-from').val();
     var to = $('#cig-date-to').val();
     if (!from || !to) { alert('Please select both dates'); return; }
-    $('.cig-quick-filter-btn').removeClass('active');
+    $('.cig-quick-filter-btn:not(.cig-users-quick-filter-btn):not(.cig-fictive-users-quick-filter-btn):not(.cig-fictive-quick-filter-btn)').removeClass('active');
     currentFilters.date_from = from; currentFilters.date_to = to;
-    clearSummaryDropdowns(); hideUserDetail(); loadStatistics(true);
+    clearSummaryDropdowns(); hideUserDetail(); loadSummary(true);
+    // Note: Users table now has its own independent filters, so we don't reload users here
   }
 
   function loadStatistics(force) { loadSummary(force); loadUsers(force); }
@@ -1589,5 +1542,41 @@ jQuery(function ($) {
   function formatDateShort(dateString) { if (!dateString) return '-'; var date = new Date(dateString.replace(' ', 'T')); return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
   function formatDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
   function escapeHtml(text) { var map = { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }; return String(text || '').replace(/[&<>"']/g, function(m){ return map[m]; }); }
+
+  /**
+   * Calculate date range based on filter type
+   * @param {string} filter - Filter type: 'today', 'this_week', 'this_month', 'last_30_days', 'all_time'
+   * @returns {object} Object with 'from' and 'to' date strings (YYYY-MM-DD format)
+   */
+  function calculateDateRange(filter) {
+    var today = new Date();
+    var from = '', to = '';
+    switch(filter) {
+      case 'today':
+        from = to = formatDate(today);
+        break;
+      case 'this_week':
+        var ws = new Date(today);
+        ws.setDate(ws.getDate() + ((ws.getDay() === 0 ? -6 : 1) - ws.getDay()));
+        from = formatDate(ws);
+        to = formatDate(today);
+        break;
+      case 'this_month':
+        from = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+        to = formatDate(today);
+        break;
+      case 'last_30_days':
+        var p30 = new Date(today);
+        p30.setDate(today.getDate() - 30);
+        from = formatDate(p30);
+        to = formatDate(today);
+        break;
+      case 'all_time':
+        from = '';
+        to = '';
+        break;
+    }
+    return { from: from, to: to };
+  }
 
 });

@@ -327,22 +327,25 @@ class CIG_Ajax_Statistics {
             $where .= " AND (i.status = 'standard' OR i.status IS NULL)";
         }
         
-        // Filter by sale_date
+        // Filter by date: use created_at for fictive invoices, sale_date for standard
+        $date_column = $this->get_date_column_for_status($status);
         if ($date_from) { 
-            $where .= " AND i.sale_date >= %s"; 
+            $where .= " AND {$date_column} >= %s"; 
             $params[] = $date_from . ' 00:00:00'; 
         }
         if ($date_to) { 
-            $where .= " AND i.sale_date <= %s"; 
+            $where .= " AND {$date_column} <= %s"; 
             $params[] = $date_to . ' 23:59:59'; 
         }
 
         // Build SQL query for user statistics
+        // For last_invoice_date, use created_at for fictive invoices, sale_date for standard
+        $last_date_column = ($status === 'fictive') ? 'i.created_at' : 'i.sale_date';
         $sql = "SELECT 
             i.author_id,
             COUNT(DISTINCT i.id) as invoice_count,
             COALESCE(SUM(i.total_amount), 0) as total_revenue,
-            MAX(i.sale_date) as last_invoice_date
+            MAX({$last_date_column}) as last_invoice_date
             FROM {$this->table_invoices} i 
             {$where}
             GROUP BY i.author_id";
@@ -370,11 +373,11 @@ class CIG_Ajax_Statistics {
             }
             
             if ($date_from) { 
-                $items_where .= " AND i.sale_date >= %s"; 
+                $items_where .= " AND {$date_column} >= %s"; 
                 $items_params[] = $date_from . ' 00:00:00'; 
             }
             if ($date_to) { 
-                $items_where .= " AND i.sale_date <= %s"; 
+                $items_where .= " AND {$date_column} <= %s"; 
                 $items_params[] = $date_to . ' 23:59:59'; 
             }
 

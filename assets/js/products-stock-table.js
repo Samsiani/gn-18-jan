@@ -205,7 +205,13 @@ jQuery(function($) {
                     'data-desc="' + (product.desc || '') + '">' + 
                     btnIcon + '</button>';
 
-                var titleHtml = '<a href="' + product.product_url + '" target="_blank" style="font-weight:600;color:inherit;text-decoration:none;">' + escapeHtml(product.title) + ' <span class="dashicons dashicons-external" style="font-size:12px;color:#999;"></span></a>';
+                // --- Visual indicator for out of stock products ---
+                var titleColor = 'inherit';
+                if (product.stock_num !== -1 && product.stock_num <= 0) {
+                    titleColor = '#dc3545';
+                }
+
+                var titleHtml = '<a href="' + product.product_url + '" target="_blank" style="font-weight:600;color:' + titleColor + ';text-decoration:none;">' + escapeHtml(product.title) + ' <span class="dashicons dashicons-external" style="font-size:12px;color:#999;"></span></a>';
                 
                 // --- INSERT DIMENSIONS HERE (FIX) ---
                 if (product.dimensions && typeof product.dimensions === 'string' && product.dimensions !== '') {

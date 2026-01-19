@@ -39,6 +39,7 @@ class CIG_Ajax_Products {
                 $like = '%' . $wpdb->esc_like($term) . '%';
                 $clauses['where'] .= $wpdb->prepare(" AND (({$wpdb->posts}.post_title LIKE %s) OR (sku_meta_search.meta_value LIKE %s))", $like, $like);
             }
+            $clauses['groupby'] = "{$wpdb->posts}.ID";
             return $clauses;
         };
 
@@ -210,6 +211,7 @@ class CIG_Ajax_Products {
                 $like = '%' . $wpdb->esc_like($search) . '%';
                 $clauses['where'] .= $wpdb->prepare(" AND (({$wpdb->posts}.post_title LIKE %s) OR ({$wpdb->posts}.post_content LIKE %s) OR (sku_meta_filter.meta_value LIKE %s))", $like, $like, $like);
             }
+            $clauses['groupby'] = "{$wpdb->posts}.ID";
             return $clauses;
         };
 

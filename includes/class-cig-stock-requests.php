@@ -219,13 +219,22 @@ class CIG_Stock_Requests {
         
         // 3. Get Screen Option (Items Per Page)
         $user   = get_current_user_id();
-        $screen = get_current_screen();
-        $option = $screen->get_option('per_page', 'option');
         $per_page = 20; // fallback
-        if ($option) {
-            $per_page = get_user_meta($user, $option, true);
-            if (empty($per_page) || $per_page < 1) {
-                $per_page = $screen->get_option('per_page', 'default');
+        
+        // Safety check: get_current_screen() returns null on frontend
+        $screen = get_current_screen();
+        if ( $screen ) {
+            $option = $screen->get_option( 'per_page', 'option' );
+            if ( $option ) {
+                $user_per_page = (int) get_user_meta( $user, $option, true );
+                if ( $user_per_page > 0 ) {
+                    $per_page = $user_per_page;
+                } else {
+                    $default = $screen->get_option( 'per_page', 'default' );
+                    if ( $default ) {
+                        $per_page = (int) $default;
+                    }
+                }
             }
         }
 

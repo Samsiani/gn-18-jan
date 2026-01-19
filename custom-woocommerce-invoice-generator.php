@@ -191,6 +191,17 @@ final class CIG_Invoice_Generator {
         register_deactivation_hook(CIG_PLUGIN_FILE, [$this, 'deactivate']);
 
         add_action('plugins_loaded', [$this, 'on_plugins_loaded'], 10);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
+    }
+
+    /**
+     * Enqueue frontend assets
+     *
+     * Ensures Dashicons are available on the frontend for non-admin users
+     * who don't have the Admin Bar (which normally loads dashicons).
+     */
+    public function enqueue_frontend_assets() {
+        wp_enqueue_style('dashicons');
     }
 
     /**

@@ -441,6 +441,80 @@ jQuery(function ($) {
         productPerfPagination.current_page = page;
         loadProductTable(page);
     });
+
+    // --- CLICK-TO-EDIT DATE FUNCTIONALITY ---
+    // Click on edit icon to show the date input
+    $(document).on('click', '.cig-btn-edit-date', function(e) {
+        e.stopPropagation();
+        var $cell = $(this).closest('td');
+        $cell.find('.cig-view-date').hide();
+        $cell.find('.cig-edit-date').show();
+        $cell.find('.cig-invoice-date-input').focus();
+    });
+
+    // On change or blur of date input, save and switch back to view mode
+    $(document).on('change', '.cig-invoice-date-input', function() {
+        var $input = $(this);
+        var invoiceId = $input.data('invoice-id');
+        var newDate = $input.val();
+        var $cell = $input.closest('td');
+        var $viewMode = $cell.find('.cig-view-date');
+        var $editMode = $cell.find('.cig-edit-date');
+
+        if (!newDate) {
+            // If empty, revert to view mode without saving
+            $editMode.hide();
+            $viewMode.show();
+            return;
+        }
+
+        // Show loading state
+        $input.prop('disabled', true);
+
+        $.ajax({
+            url: cigStats.ajax_url,
+            method: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'cig_update_invoice_date_stat',
+                nonce: cigStats.nonce,
+                invoice_id: invoiceId,
+                new_date: newDate
+            },
+            success: function(res) {
+                if (res && res.success) {
+                    // Update the display text with formatted date
+                    var displayDate = newDate.replace('T', ' ').substring(0, 16);
+                    $viewMode.find('.date-text').text(displayDate);
+                    
+                    // Switch back to view mode
+                    $editMode.hide();
+                    $viewMode.show();
+                } else {
+                    alert(res.data?.message || cigStats.i18n?.error_updating_date || 'Error updating date');
+                }
+            },
+            error: function() {
+                alert(cigStats.i18n?.error_updating_date || 'Error updating date');
+            },
+            complete: function() {
+                $input.prop('disabled', false);
+            }
+        });
+    });
+
+    // On blur without change, just hide the input
+    $(document).on('blur', '.cig-invoice-date-input', function() {
+        var $input = $(this);
+        // Small delay to allow change event to fire first
+        setTimeout(function() {
+            var $cell = $input.closest('td');
+            if ($cell.find('.cig-edit-date').is(':visible')) {
+                $cell.find('.cig-edit-date').hide();
+                $cell.find('.cig-view-date').show();
+            }
+        }, 150);
+    });
   }
 
   // --- EXTERNAL BALANCE LOGIC ---
@@ -1287,6 +1361,11 @@ jQuery(function ($) {
                 paidHtml += inv.paid_breakdown;
             }
 
+            // Click-to-Edit Date Pattern
+            var rawDate = inv.date || '';
+            var displayDate = rawDate ? rawDate.substring(0, 16) : '—';
+            var inputVal = rawDate.replace(' ', 'T').substring(0, 16);
+
             html += '<tr>';
             html += '<td><strong>' + escapeHtml(inv.invoice_number || '') + '</strong></td>';
             html += '<td>' + escapeHtml(inv.customer) + '</td>';
@@ -1294,7 +1373,16 @@ jQuery(function ($) {
             html += '<td><strong>' + formatCurrency(inv.total || 0) + '</strong></td>';
             html += '<td style="' + paidClass + '">' + paidHtml + '</td>';
             html += '<td style="' + dueClass + '">' + formatCurrency(inv.due || 0) + '</td>';
-            html += '<td>' + formatDateTime(inv.date) + '</td>';
+            // Click-to-Edit Date Cell
+            html += '<td class="col-date-edit">';
+            html += '  <div class="cig-view-date" data-id="' + inv.id + '">';
+            html += '    <span class="date-text">' + displayDate + '</span>';
+            html += '    <span class="dashicons dashicons-edit cig-btn-edit-date" title="Edit Date" style="cursor:pointer; color:#50529d; font-size:16px; vertical-align:middle; margin-left:5px;"></span>';
+            html += '  </div>';
+            html += '  <div class="cig-edit-date" style="display:none;">';
+            html += '    <input type="datetime-local" class="cig-invoice-date-input" data-invoice-id="' + inv.id + '" value="' + inputVal + '" style="font-size:11px; width:100%; box-sizing:border-box;">';
+            html += '  </div>';
+            html += '</td>';
             html += '<td>' + escapeHtml(inv.author || '') + '</td>';
             html += '<td><a class="cig-btn-sm cig-btn-view" href="' + inv.view_url + '" target="_blank">ნახვა</a> <a class="cig-btn-sm cig-btn-edit" href="' + inv.edit_url + '" target="_blank">რედაქტირება</a></td>';
             html += '</tr>';
@@ -1330,6 +1418,11 @@ jQuery(function ($) {
                           paidHtml += inv.paid_breakdown;
                       }
 
+                      // Click-to-Edit Date Pattern
+                      var rawDate = inv.date || '';
+                      var displayDate = rawDate ? rawDate.substring(0, 16) : '—';
+                      var inputVal = rawDate.replace(' ', 'T').substring(0, 16);
+
                       html += '<tr>';
                       html += '<td><strong>' + escapeHtml(inv.invoice_number) + '</strong></td>';
                       html += '<td>' + escapeHtml(inv.customer) + '</td>';
@@ -1338,7 +1431,16 @@ jQuery(function ($) {
                       html += '<td style="color:#28a745;">' + paidHtml + '</td>';
                       html += '<td style="color:#dc3545;font-weight:bold;">' + formatCurrency(inv.due) + '</td>';
                       html += '<td>' + escapeHtml(inv.author) + '</td>';
-                      html += '<td>' + formatDateTime(inv.date) + '</td>';
+                      // Click-to-Edit Date Cell
+                      html += '<td class="col-date-edit">';
+                      html += '  <div class="cig-view-date" data-id="' + inv.id + '">';
+                      html += '    <span class="date-text">' + displayDate + '</span>';
+                      html += '    <span class="dashicons dashicons-edit cig-btn-edit-date" title="Edit Date" style="cursor:pointer; color:#50529d; font-size:16px; vertical-align:middle; margin-left:5px;"></span>';
+                      html += '  </div>';
+                      html += '  <div class="cig-edit-date" style="display:none;">';
+                      html += '    <input type="datetime-local" class="cig-invoice-date-input" data-invoice-id="' + inv.id + '" value="' + inputVal + '" style="font-size:11px; width:100%; box-sizing:border-box;">';
+                      html += '  </div>';
+                      html += '</td>';
                       html += '<td><a class="cig-btn-sm cig-btn-view" href="' + inv.view_url + '" target="_blank">ნახვა</a> <a class="cig-btn-sm cig-btn-edit" href="' + inv.edit_url + '" target="_blank">რედაქტირება</a></td>';
                       html += '</tr>';
                   });

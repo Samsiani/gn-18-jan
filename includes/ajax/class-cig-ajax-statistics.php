@@ -52,6 +52,9 @@ class CIG_Ajax_Statistics {
 
         // --- Product Performance Table ---
         add_action('wp_ajax_cig_get_product_performance_table', [$this, 'get_product_performance_table']);
+
+        // --- Invoice Date Update from Statistics Dashboard ---
+        add_action('wp_ajax_cig_update_invoice_date_stat', [$this, 'update_invoice_date_stat']);
     }
 
     /**
@@ -1542,5 +1545,100 @@ class CIG_Ajax_Statistics {
         $e_ts = $end ? strtotime($end . ' 23:59:59') : PHP_INT_MAX;
 
         return ($ts >= $s_ts && $ts <= $e_ts);
+    }
+
+    /**
+     * Update Invoice Date from Statistics Dashboard
+     * 
+     * Updates the sale_date and activation_date in cig_invoices table
+     * and syncs post_date in wp_posts table.
+     * 
+     * IMPORTANT: Uses 'id' as the primary key (NOT 'post_id')
+     * The 'id' column in cig_invoices matches the WP Post ID.
+     */
+    public function update_invoice_date_stat() {
+        $this->security->verify_ajax_request('cig_nonce', 'nonce', 'edit_posts');
+        global $wpdb;
+
+        $invoice_id = isset($_POST['invoice_id']) ? intval($_POST['invoice_id']) : 0;
+        $new_date   = isset($_POST['new_date']) ? sanitize_text_field($_POST['new_date']) : '';
+
+        if (!$invoice_id) {
+            wp_send_json_error(['message' => __('Invalid invoice ID', 'cig')]);
+        }
+
+        if (empty($new_date)) {
+            wp_send_json_error(['message' => __('Date cannot be empty', 'cig')]);
+        }
+
+        // Convert datetime-local format (YYYY-MM-DDTHH:MM) to MySQL DATETIME format
+        $mysql_date = str_replace('T', ' ', $new_date);
+        
+        // Ensure seconds are included
+        if (strlen($mysql_date) === 16) {
+            $mysql_date .= ':00';
+        }
+
+        // Validate date format
+        $parsed_date = strtotime($mysql_date);
+        if (!$parsed_date) {
+            wp_send_json_error(['message' => __('Invalid date format', 'cig')]);
+        }
+
+        // Format for MySQL
+        $mysql_datetime = gmdate('Y-m-d H:i:s', $parsed_date);
+        $mysql_date_only = gmdate('Y-m-d', $parsed_date);
+
+        // Update cig_invoices table - use 'id' as primary key (NOT 'post_id')
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $result = $wpdb->update(
+            $this->table_invoices,
+            [
+                'sale_date'       => $mysql_datetime,
+                'activation_date' => $mysql_datetime
+            ],
+            ['id' => $invoice_id],
+            ['%s', '%s'],
+            ['%d']
+        );
+
+        if ($result === false) {
+            wp_send_json_error([
+                'message' => __('Database update failed', 'cig'),
+                'error'   => $wpdb->last_error
+            ]);
+        }
+
+        // Sync WP Post date to maintain consistency
+        $gmt_date = get_gmt_from_date($mysql_datetime);
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $post_result = $wpdb->update(
+            $wpdb->posts,
+            [
+                'post_date'         => $mysql_datetime,
+                'post_date_gmt'     => $gmt_date,
+                'post_modified'     => $mysql_datetime,
+                'post_modified_gmt' => $gmt_date
+            ],
+            ['ID' => $invoice_id],
+            ['%s', '%s', '%s', '%s'],
+            ['%d']
+        );
+
+        if ($post_result === false) {
+            wp_send_json_error([
+                'message' => __('Failed to sync post date', 'cig'),
+                'error'   => $wpdb->last_error
+            ]);
+        }
+
+        // Also update sold_date post meta for consistency with warranty sheet
+        update_post_meta($invoice_id, '_cig_sold_date', $mysql_date_only);
+
+        wp_send_json_success([
+            'message'  => __('Date updated successfully', 'cig'),
+            'new_date' => $mysql_datetime
+        ]);
     }
 }

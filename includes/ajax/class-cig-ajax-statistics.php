@@ -1585,9 +1585,9 @@ class CIG_Ajax_Statistics {
             wp_send_json_error(['message' => __('Invalid date format', 'cig')]);
         }
 
-        // Format for MySQL
-        $mysql_datetime = gmdate('Y-m-d H:i:s', $parsed_date);
-        $mysql_date_only = gmdate('Y-m-d', $parsed_date);
+        // Format for MySQL - use date() for local time (not gmdate())
+        $mysql_datetime = date('Y-m-d H:i:s', $parsed_date);
+        $mysql_date_only = date('Y-m-d', $parsed_date);
 
         // Update cig_invoices table - use 'id' as primary key (NOT 'post_id')
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
@@ -1610,6 +1610,7 @@ class CIG_Ajax_Statistics {
         }
 
         // Sync WP Post date to maintain consistency
+        // get_gmt_from_date() expects local time and converts to GMT
         $gmt_date = get_gmt_from_date($mysql_datetime);
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery

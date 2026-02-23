@@ -104,8 +104,17 @@ class CIG_Stock_Manager {
 
         if ($quantity > 0) {
             $expiry_date = '';
-            if ($reservation_days > 0 && !empty($invoice_date)) {
-                $expiry_date = date('Y-m-d H:i:s', strtotime($invoice_date . ' +' . intval($reservation_days) . ' days'));
+            if ($reservation_days > 0) {
+                $now_ts          = current_time('timestamp');
+                $existing_expiry = $reserved_meta[$invoice_id]['expires'] ?? '';
+
+                if (!empty($existing_expiry) && strtotime($existing_expiry) > $now_ts) {
+                    // A valid future expiry already exists for this invoice — keep it as-is.
+                    $expiry_date = $existing_expiry;
+                } else {
+                    // Expired or never set — start the window from now.
+                    $expiry_date = date('Y-m-d H:i:s', $now_ts + (intval($reservation_days) * DAY_IN_SECONDS));
+                }
             }
 
             $reserved_meta[$invoice_id] = [
@@ -354,6 +363,7 @@ class CIG_Stock_Manager {
             $changed = false;
             foreach ($reserved_meta as $invoice_id => $data) {
                 if (!empty($data['expires']) && $data['expires'] < $now) {
+                    // 1. Update legacy postmeta (_cig_items).
                     $invoice_items = get_post_meta($invoice_id, '_cig_items', true);
                     if (is_array($invoice_items)) {
                         foreach ($invoice_items as &$item) {
@@ -363,6 +373,29 @@ class CIG_Stock_Manager {
                         }
                         update_post_meta($invoice_id, '_cig_items', $invoice_items);
                     }
+
+                    // 2. Mirror the cancellation in the custom DB table.
+                    $invoice_number = get_post_meta((int) $invoice_id, '_cig_invoice_number', true);
+                    if (!empty($invoice_number)) {
+                        $internal_id = $wpdb->get_var($wpdb->prepare(
+                            "SELECT id FROM {$wpdb->prefix}cig_invoices WHERE invoice_number = %s",
+                            $invoice_number
+                        ));
+                        if ($internal_id) {
+                            $wpdb->update(
+                                $wpdb->prefix . 'cig_invoice_items',
+                                ['item_status' => 'canceled'],
+                                [
+                                    'invoice_id'  => (int) $internal_id,
+                                    'product_id'  => (int) $product_id,
+                                    'item_status' => 'reserved',
+                                ],
+                                ['%s'],
+                                ['%d', '%d', '%s']
+                            );
+                        }
+                    }
+
                     unset($reserved_meta[$invoice_id]);
                     $changed = true;
                 }

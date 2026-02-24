@@ -168,15 +168,26 @@ Expired entries are cleaned up by the `cig_check_expired_reservations` hourly cr
 ```bash
 composer install
 ./vendor/bin/phpunit --testdox
-# 13 tests, all green
+# 79 tests, all green
 ```
 
-Tests use **Brain Monkey** to mock WP functions and **Mockery** to mock `$wpdb`. No WordPress installation or database needed. `tests/bootstrap.php` defines all required WP constants and stubs `WP_Error`.
+Tests use **Brain Monkey** to mock WP functions and **Mockery** to mock `$wpdb`. No WordPress installation or database needed. `tests/bootstrap.php` defines all required WP constants and stubs `WP_Error`, `WP_User`, `WP_REST_Request`, `WP_REST_Response`, `WP_REST_Server`.
+
+| Test file | Tests | Coverage |
+|-----------|-------|----------|
+| `InvoiceManagerTest.php` | 7 | `CIG_Invoice_Manager` CRUD |
+| `StockManagerTest.php` | 6 | `CIG_Stock_Manager` reservation logic |
+| `RestApiTest.php` | 12 | `CIG_Rest_API` — auth endpoints, `format_user`, `get_cig_role` |
+| `RestInvoicesLogicTest.php` | 34 | `CIG_Rest_Invoices` private helpers via Reflection |
+| `RestDashboardTest.php` | 10 | `CIG_Rest_Dashboard` — settings, accountant endpoints |
+| `DbSchemaTest.php` | 10 | Static analysis: all columns in `CIG_DB_Installer` SQL |
 
 **Rules:**
 - Never stub `get_post_meta` globally in `setUp()` — it blocks per-test `Functions\expect()`. Use `Functions\when()` per test instead.
 - `$wpdb->get_row(..., ARRAY_A)` mocks must return plain PHP arrays, not `stdClass` objects.
 - `ARRAY_A`, `ARRAY_N`, `OBJECT` constants are defined in `tests/bootstrap.php`.
+- Never mix `Functions\stubs()` + `Functions\expect()` for the same function in one test. Use `Functions\when()->alias(fn)` to capture call arguments instead.
+- Private methods are tested via `ReflectionMethod::setAccessible(true)` — no need to change visibility in production code.
 
 ### Frontend — Vitest (in the Vue SPA repo)
 ```bash
@@ -196,6 +207,16 @@ npm test
 - `fictive` invoices: `item_status` locked to `none`, payments not allowed, no stock interaction
 - `completed`/`sold` lifecycle: treated identically as "Sold"
 - `sale_date` = activation date (set when `standard`); `sold_date` = formal sale date (warranty certificate)
+
+## DB Schema Notes
+
+**Adding columns to `wp_cig_invoices`:** Edit `CIG_DB_Installer::create_invoices_table()` and add the column. `dbDelta()` will add missing columns on the next plugin activation. Always add the matching column to `format_invoice()` in `CIG_Rest_Invoices` so the API returns it.
+
+**Known bug fixed (v4.1.1 → v4.1.2):** The following 6 columns were referenced by the REST API but were missing from the CREATE TABLE statement, causing silent MySQL errors on every Accountant-page PATCH and NULL reads on every GET:
+- `is_credit_checked`, `is_receipt_checked`, `is_corrected`
+- `accountant_note`, `rs_uploaded_by`, `rs_uploaded_date`
+
+**Known limitation:** `cig_customers.tax_id` is indexed with a plain `KEY`, not `UNIQUE KEY`. Duplicate tax IDs can be inserted if `sync_customer()` encounters a race condition.
 
 ## Common Operations
 

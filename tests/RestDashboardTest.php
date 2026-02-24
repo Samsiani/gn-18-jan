@@ -258,4 +258,33 @@ class RestDashboardTest extends \PHPUnit\Framework\TestCase {
         $this->assertSame('New Name',            $captured['company_name']);
         $this->assertSame('should-be-preserved', $captured['custom_secret']);
     }
+
+    // -------------------------------------------------------------------------
+    // require_accountant_or_woocommerce()
+    // -------------------------------------------------------------------------
+
+    public function test_accountant_permission_rejects_unauthenticated(): void {
+        Functions\when('is_user_logged_in')->justReturn(false);
+
+        $result = $this->dashboard->require_accountant_or_woocommerce();
+
+        $this->assertInstanceOf(WP_Error::class, $result);
+        $this->assertSame(401, $result->get_error_data()['status']);
+    }
+
+    public function test_accountant_permission_rejects_sales_user(): void {
+        // setUp stubs: is_user_logged_in=true, current_user_can=false — simulates a sales user
+        $result = $this->dashboard->require_accountant_or_woocommerce();
+
+        $this->assertInstanceOf(WP_Error::class, $result);
+        $this->assertSame(403, $result->get_error_data()['status']);
+    }
+
+    public function test_accountant_permission_allows_accountant_capability(): void {
+        Functions\when('current_user_can')->justReturn(true);
+
+        $result = $this->dashboard->require_accountant_or_woocommerce();
+
+        $this->assertTrue($result);
+    }
 }

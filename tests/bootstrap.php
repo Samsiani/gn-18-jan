@@ -46,6 +46,7 @@ if (!class_exists('WP_Error')) {
 
         public function get_error_code()    { return $this->code; }
         public function get_error_message() { return $this->message; }
+        public function get_error_data()    { return $this->data; }
     }
 }
 

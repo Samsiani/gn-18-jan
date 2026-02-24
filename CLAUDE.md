@@ -168,7 +168,7 @@ Expired entries are cleaned up by the `cig_check_expired_reservations` hourly cr
 ```bash
 composer install
 ./vendor/bin/phpunit --testdox
-# 79 tests, all green
+# 82 tests, all green
 ```
 
 Tests use **Brain Monkey** to mock WP functions and **Mockery** to mock `$wpdb`. No WordPress installation or database needed. `tests/bootstrap.php` defines all required WP constants and stubs `WP_Error`, `WP_User`, `WP_REST_Request`, `WP_REST_Response`, `WP_REST_Server`.
@@ -179,7 +179,7 @@ Tests use **Brain Monkey** to mock WP functions and **Mockery** to mock `$wpdb`.
 | `StockManagerTest.php` | 6 | `CIG_Stock_Manager` reservation logic |
 | `RestApiTest.php` | 12 | `CIG_Rest_API` — auth endpoints, `format_user`, `get_cig_role` |
 | `RestInvoicesLogicTest.php` | 34 | `CIG_Rest_Invoices` private helpers via Reflection |
-| `RestDashboardTest.php` | 10 | `CIG_Rest_Dashboard` — settings, accountant endpoints |
+| `RestDashboardTest.php` | 13 | `CIG_Rest_Dashboard` — settings, accountant endpoints, permission callbacks |
 | `DbSchemaTest.php` | 10 | Static analysis: all columns in `CIG_DB_Installer` SQL |
 
 **Rules:**
@@ -187,7 +187,10 @@ Tests use **Brain Monkey** to mock WP functions and **Mockery** to mock `$wpdb`.
 - `$wpdb->get_row(..., ARRAY_A)` mocks must return plain PHP arrays, not `stdClass` objects.
 - `ARRAY_A`, `ARRAY_N`, `OBJECT` constants are defined in `tests/bootstrap.php`.
 - Never mix `Functions\stubs()` + `Functions\expect()` for the same function in one test. Use `Functions\when()->alias(fn)` to capture call arguments instead.
+- `Functions\when()` overrides a `Functions\stubs()` stub registered in `setUp()` — use this to vary per-test return values.
+- `WP_Error` stub in `bootstrap.php` exposes `get_error_code()`, `get_error_message()`, and `get_error_data()`. If a new test needs `get_error_data()`, it is already available.
 - Private methods are tested via `ReflectionMethod::setAccessible(true)` — no need to change visibility in production code.
+- When adding DB transactions to a method under test, add `$this->wpdb->shouldReceive('query')->andReturn(true)` to cover `START TRANSACTION` / `COMMIT` / `ROLLBACK` calls.
 
 ### Frontend — Vitest (in the Vue SPA repo)
 ```bash
@@ -215,6 +218,12 @@ npm test
 **Known bug fixed (v4.1.1 → v4.1.2):** The following 6 columns were referenced by the REST API but were missing from the CREATE TABLE statement, causing silent MySQL errors on every Accountant-page PATCH and NULL reads on every GET:
 - `is_credit_checked`, `is_receipt_checked`, `is_corrected`
 - `accountant_note`, `rs_uploaded_by`, `rs_uploaded_date`
+
+**Security fix (v4.1.2):** `PATCH /invoices/{id}/accountant-status` and `PATCH /invoices/{id}/accountant-note` were guarded by `require_login()` (any authenticated user). Now guarded by `require_accountant_or_woocommerce()` which requires `administrator`, `manage_woocommerce`, or `cig_accountant_access` capability.
+
+**Atomicity fix (v4.1.2):** `CIG_Invoice_Manager::create_invoice()` and `update_invoice()` now wrap all write operations in a MySQL transaction (`START TRANSACTION` / `COMMIT` / `ROLLBACK`). A failed item or payment insert no longer leaves an orphaned invoice row.
+
+**Localisation fix (v4.1.2):** `get_accountant_invoices()` payment method labels were hardcoded in Georgian. Replaced with English (`Company Transfer`, `Cash`, `Consignment`, `Credit`, `Other`).
 
 **Known limitation:** `cig_customers.tax_id` is indexed with a plain `KEY`, not `UNIQUE KEY`. Duplicate tax IDs can be inserted if `sync_customer()` encounters a race condition.
 

@@ -63,6 +63,8 @@ class InvoiceManagerTest extends \PHPUnit\Framework\TestCase {
     // Test: create_invoice() returns the inserted int ID on success
     // -----------------------------------------------------------------------
     public function test_create_invoice_returns_id(): void {
+        $this->wpdb->shouldReceive('query')->andReturn(true); // START TRANSACTION + COMMIT
+
         $this->wpdb->shouldReceive('insert')
             ->once()
             ->withArgs(function($table) {
@@ -93,6 +95,7 @@ class InvoiceManagerTest extends \PHPUnit\Framework\TestCase {
     // Test: create_invoice() returns WP_Error when $wpdb->insert fails
     // -----------------------------------------------------------------------
     public function test_create_invoice_returns_wp_error_on_db_failure(): void {
+        $this->wpdb->shouldReceive('query')->andReturn(true); // START TRANSACTION + ROLLBACK
         $this->wpdb->shouldReceive('insert')->andReturn(false);
         $this->wpdb->last_error = 'Duplicate entry';
 
@@ -130,6 +133,8 @@ class InvoiceManagerTest extends \PHPUnit\Framework\TestCase {
             'total_amount'     => 1000.0,
             'paid_amount'      => 500.0,
         ];
+
+        $this->wpdb->shouldReceive('query')->andReturn(true); // START TRANSACTION + COMMIT
 
         $this->wpdb->shouldReceive('prepare')
             ->andReturnUsing(function($q) { return $q; });

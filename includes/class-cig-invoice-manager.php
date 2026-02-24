@@ -139,6 +139,8 @@ class CIG_Invoice_Manager {
         // Fictive = sale_date is NULL
         $sale_date = ($status === 'standard') ? $now : null;
 
+        $wpdb->query('START TRANSACTION');
+
         // Insert invoice record
         $insert_result = $wpdb->insert(
             $this->table_invoices,
@@ -160,24 +162,33 @@ class CIG_Invoice_Manager {
         );
 
         if (false === $insert_result) {
+            $wpdb->query('ROLLBACK');
             return new WP_Error('db_insert_error', __('Failed to create invoice.', 'cig'), $wpdb->last_error);
         }
 
         $invoice_id = $wpdb->insert_id;
 
         // Insert items
+        $items_ok = true;
         if (!empty($items) && is_array($items)) {
-            $this->insert_items($invoice_id, $items);
+            $items_ok = $this->insert_items($invoice_id, $items);
         }
 
         // Insert payments
+        $payments_ok = true;
         if (!empty($payments) && is_array($payments)) {
-            $this->insert_payments($invoice_id, $payments);
+            $payments_ok = $this->insert_payments($invoice_id, $payments);
+        }
+
+        if (!$items_ok || !$payments_ok) {
+            $wpdb->query('ROLLBACK');
+            return new WP_Error('db_insert_error', __('Failed to save invoice items or payments.', 'cig'));
         }
 
         // Recalculate paid_amount from payments
         $this->recalculate_paid_amount($invoice_id);
 
+        $wpdb->query('COMMIT');
         return $invoice_id;
     }
 
@@ -266,6 +277,9 @@ class CIG_Invoice_Manager {
             $update_format[]          = '%s';
         }
 
+        // Start transaction before write operations
+        $wpdb->query('START TRANSACTION');
+
         // Update invoice if there's data to update
         if (!empty($update_data)) {
             $result = $wpdb->update(
@@ -277,6 +291,7 @@ class CIG_Invoice_Manager {
             );
 
             if (false === $result) {
+                $wpdb->query('ROLLBACK');
                 return new WP_Error('db_update_error', __('Failed to update invoice.', 'cig'), $wpdb->last_error);
             }
         }
@@ -294,6 +309,7 @@ class CIG_Invoice_Manager {
         // Recalculate paid_amount based on the sum of cig_payments
         $this->recalculate_paid_amount($id);
 
+        $wpdb->query('COMMIT');
         return true;
     }
 

@@ -74,7 +74,7 @@ class CIG_Rest_Dashboard {
         register_rest_route( self::NAMESPACE, '/invoices/(?P<id>[\d]+)/accountant-status', [
             'methods'             => 'PATCH',
             'callback'            => [ $this, 'update_accountant_status' ],
-            'permission_callback' => [ $this, 'require_login' ],
+            'permission_callback' => [ $this, 'require_accountant_or_woocommerce' ],
         ] );
 
         // PATCH /invoices/{id}/accountant-note
@@ -82,7 +82,7 @@ class CIG_Rest_Dashboard {
         register_rest_route( self::NAMESPACE, '/invoices/(?P<id>[\d]+)/accountant-note', [
             'methods'             => 'PATCH',
             'callback'            => [ $this, 'update_accountant_note' ],
-            'permission_callback' => [ $this, 'require_login' ],
+            'permission_callback' => [ $this, 'require_accountant_or_woocommerce' ],
         ] );
 
         register_rest_route( self::NAMESPACE, '/settings/company', [
@@ -428,11 +428,11 @@ class CIG_Rest_Dashboard {
         }
 
         $method_labels = [
-            'company_transfer' => 'კომპანია',
-            'cash'             => 'ქეში',
-            'consignment'      => 'კონსიგნაცია',
-            'credit'           => 'განვადება',
-            'other'            => 'სხვა',
+            'company_transfer' => 'Company Transfer',
+            'cash'             => 'Cash',
+            'consignment'      => 'Consignment',
+            'credit'           => 'Credit',
+            'other'            => 'Other',
         ];
 
         $data = [];
@@ -674,5 +674,19 @@ class CIG_Rest_Dashboard {
             return new WP_Error( 'forbidden', __( 'Only administrators can modify settings.', 'cig' ), [ 'status' => 403 ] );
         }
         return true;
+    }
+
+    public function require_accountant_or_woocommerce() {
+        if ( ! is_user_logged_in() ) {
+            return new WP_Error( 'not_authenticated', __( 'You must be logged in.', 'cig' ), [ 'status' => 401 ] );
+        }
+        if (
+            current_user_can( 'administrator' ) ||
+            current_user_can( 'manage_woocommerce' ) ||
+            current_user_can( 'cig_accountant_access' )
+        ) {
+            return true;
+        }
+        return new WP_Error( 'forbidden', __( 'You do not have permission to perform this action.', 'cig' ), [ 'status' => 403 ] );
     }
 }

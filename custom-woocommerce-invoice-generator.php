@@ -181,6 +181,9 @@ final class CIG_Invoice_Generator {
         
         // Load Admin Portal
         require_once CIG_INCLUDES_DIR . 'class-cig-admin-portal.php';
+
+        // Auto-updater (PUC via Composer)
+        require_once CIG_INCLUDES_DIR . 'class-cig-updater.php';
     }
 
     /**
@@ -249,6 +252,8 @@ final class CIG_Invoice_Generator {
         
         // Init Migrator (4.0.0) - handles admin notices for migration
         $this->migrator = new CIG_Migrator();
+
+        new CIG_Updater();
     }
 
     /**

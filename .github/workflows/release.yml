@@ -1,0 +1,42 @@
+name: Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Build zip
+        run: |
+          mkdir -p /tmp/build/gn-industrial-custom-invoice-generator
+          rsync -r \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='composer.json' \
+            --exclude='composer.lock' \
+            --exclude='*.md' \
+            --exclude='*.pot' \
+            ./ /tmp/build/gn-industrial-custom-invoice-generator/
+          cd /tmp/build
+          zip -r gn-industrial-custom-invoice-generator.zip gn-industrial-custom-invoice-generator/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/build/gn-industrial-custom-invoice-generator.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -288,7 +288,7 @@ class CIG_Accountant {
                                 } else {
                                     $title = implode(' + ', array_keys($sums));
                                     $desc_parts = [];
-                                    foreach ($sums as $lbl => $amt) $desc_parts[] = $lbl . ' ' . number_format($amt, 0) . ' ₾';
+                                    foreach ($sums as $lbl => $amt) $desc_parts[] = esc_html($lbl) . ' ' . number_format($amt, 0) . ' ₾';
                                     $payment_str = '<strong>' . esc_html($title) . '</strong><div style="font-size:11px; color:#666;">(' . implode(', ', $desc_parts) . ')</div>';
                                 }
                             }

@@ -247,7 +247,7 @@ jQuery(function($) {
             
             if (range === 'today') { from = fmt(today); to = fmt(today); }
             else if (range === 'yesterday') { var d = new Date(today); d.setDate(d.getDate() - 1); from = fmt(d); to = fmt(d); }
-            else if (range === 'week') { var d = new Date(today); var day = d.getDay() || 7; if(day !== 1) d.setHours(-24 * (day - 1)); from = fmt(d); to = fmt(today); }
+            else if (range === 'week') { var d = new Date(today); var day = d.getDay() || 7; if(day !== 1) d.setDate(d.getDate() - (day - 1)); from = fmt(d); to = fmt(today); }
             else if (range === 'month') { var d = new Date(today.getFullYear(), today.getMonth(), 1); from = fmt(d); to = fmt(today); }
             else if (range === 'all') { from = ''; to = ''; }
             
@@ -295,6 +295,9 @@ jQuery(function($) {
             pendingTargetState = desiredState;
             currentInvoiceId = id;
 
+            // Disable all checkboxes to prevent race condition while modal is open
+            $('.cig-status-chk').prop('disabled', true);
+
             var msg = '';
             var label = getStatusLabel(type);
             var row = $chk.closest('tr');
@@ -317,7 +320,8 @@ jQuery(function($) {
         // Confirm YES
         $(document).on('click', '#cig-confirm-yes', function() {
             $('#cig-confirm-modal').fadeOut(200);
-            
+            $('.cig-status-chk').prop('disabled', false); // Re-enable after modal closes
+
             if (!pendingCheckbox) return;
             var $chk = pendingCheckbox;
             var row = $chk.closest('tr');
@@ -350,6 +354,7 @@ jQuery(function($) {
 
         $(document).on('click', '#cig-confirm-no', function() {
             $('#cig-confirm-modal').fadeOut(200);
+            $('.cig-status-chk').prop('disabled', false); // Re-enable after modal closes
         });
 
 

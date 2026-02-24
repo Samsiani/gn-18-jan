@@ -172,6 +172,7 @@ class CIG_Ajax_Invoices {
 
         if (!is_array($d)) {
             wp_send_json_error(['message' => 'Invalid data format']);
+            return;
         }
         
         // Security Check for Completed Invoices

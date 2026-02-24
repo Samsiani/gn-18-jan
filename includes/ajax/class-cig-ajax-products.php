@@ -185,7 +185,7 @@ class CIG_Ajax_Products {
         $pid=intval($_POST['product_id']); $q=floatval($_POST['quantity']); $inv=intval($_POST['invoice_id']);
         $av=$this->stock->get_available($pid, $inv);
         $prod = wc_get_product($pid);
-        if($prod->get_stock_quantity() === null) wp_send_json_success(['available'=>9999, 'can_add'=>true]);
+        if(!$prod || $prod->get_stock_quantity() === null) wp_send_json_success(['available'=>9999, 'can_add'=>true]);
         $can=$q<=$av;
         wp_send_json_success(['available'=>max(0,$av), 'can_add'=>$can, 'message'=>$can?sprintf(__('%s available','cig'),$av):sprintf(__('Only %s available','cig'),$av)]);
     }
@@ -307,12 +307,13 @@ class CIG_Ajax_Products {
 
         $found = false;
         foreach ($cart as &$c_item) {
-            if ($c_item['id'] == $item['id']) {
+            if ($c_item['id'] === intval($item['id'])) {
                 $c_item['qty'] = isset($c_item['qty']) ? intval($c_item['qty']) + 1 : 2;
                 $found = true;
                 break;
             }
         }
+        unset($c_item); // Prevent reference leak after loop
 
         if (!$found) {
             $new_item = [

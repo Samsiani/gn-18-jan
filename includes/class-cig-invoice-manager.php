@@ -669,7 +669,7 @@ class CIG_Invoice_Manager {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $total_paid = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COALESCE(SUM(amount), 0) FROM {$this->table_payments} WHERE invoice_id = %d AND method != 'consignment'",
+                "SELECT COALESCE(SUM(amount), 0) FROM {$this->table_payments} WHERE invoice_id = %d AND LOWER(method) != 'consignment'",
                 $invoice_id
             )
         );

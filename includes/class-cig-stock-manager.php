@@ -353,7 +353,10 @@ class CIG_Stock_Manager {
 
     public function check_expired_reservations() {
         global $wpdb;
-        $product_ids = $wpdb->get_col("SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_cig_reserved_stock'");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $product_ids = $wpdb->get_col(
+            $wpdb->prepare("SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s", '_cig_reserved_stock')
+        );
         if (empty($product_ids)) return;
 
         $now = current_time('mysql');
@@ -371,6 +374,7 @@ class CIG_Stock_Manager {
                                 $item['status'] = 'canceled';
                             }
                         }
+                        unset($item); // Prevent reference leak after loop
                         update_post_meta($invoice_id, '_cig_items', $invoice_items);
                     }
 

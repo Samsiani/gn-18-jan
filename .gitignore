@@ -1,0 +1,20 @@
+# Dev-only test dependencies — not needed in the deployed plugin
+vendor/antecedent/
+vendor/bin/
+vendor/brain/
+vendor/doctrine/
+vendor/hamcrest/
+vendor/mockery/
+vendor/myclabs/
+vendor/nikic/
+vendor/phar-io/
+vendor/phpunit/
+vendor/sebastian/
+vendor/theseer/
+
+# PHPUnit artefacts
+.phpunit.result.cache
+.phpunit.cache/
+
+# macOS
+.DS_Store

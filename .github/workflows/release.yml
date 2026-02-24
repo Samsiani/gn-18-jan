@@ -30,8 +30,11 @@ jobs:
             --exclude='.github' \
             --exclude='composer.json' \
             --exclude='composer.lock' \
+            --exclude='phpunit.xml.dist' \
             --exclude='*.md' \
             --exclude='*.pot' \
+            --exclude='vue-source/' \
+            --exclude='tests/' \
             ./ /tmp/build/gn-industrial-custom-invoice-generator/
           cd /tmp/build
           zip -r gn-industrial-custom-invoice-generator.zip gn-industrial-custom-invoice-generator/

@@ -37,6 +37,9 @@ class CIG_Core {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_front_assets']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
 
+        // Vue SPA shortcode
+        add_shortcode('cig_vue_app', [$this, 'render_vue_app']);
+
         // --- Cart Hooks ---
         // Single Product Page
         add_action('woocommerce_after_add_to_cart_button', [$this, 'render_single_product_btn']);
@@ -204,8 +207,74 @@ class CIG_Core {
 
         if (is_singular('invoice')) {
             $should_enqueue = true;
-            $enqueue_mini_dashboard = true; 
-            $enqueue_accountant = true; 
+            $enqueue_mini_dashboard = true;
+            $enqueue_accountant = true;
+        }
+
+        // --- Vue SPA (cig_vue_app shortcode) ---
+        if (is_page()) {
+            global $post;
+            if ($post && has_shortcode($post->post_content, 'cig_vue_app')) {
+                $current_user_data = null;
+                if (is_user_logged_in() && function_exists('CIG') && isset(CIG()->rest_api)) {
+                    $current_user_data = CIG()->rest_api->format_user(wp_get_current_user());
+                }
+
+                wp_enqueue_style(
+                    'cig-vue-app',
+                    CIG_PLUGIN_URL . 'dist/gn-invoice.css',
+                    [],
+                    CIG_VERSION
+                );
+
+                wp_enqueue_script(
+                    'cig-vue-app',
+                    CIG_PLUGIN_URL . 'dist/gn-invoice.js',
+                    [],
+                    CIG_VERSION,
+                    true
+                );
+
+                wp_localize_script('cig-vue-app', 'cigGlobal', [
+                    'restUrl'     => esc_url_raw(rest_url('cig/v1/')),
+                    'nonce'       => wp_create_nonce('wp_rest'),
+                    'isLoggedIn'  => is_user_logged_in(),
+                    'currentUser' => $current_user_data,
+                ]);
+
+                // Vite outputs ES modules which require type="module" on the script tag.
+                // WordPress doesn't support this natively, so we patch the tag via filter.
+                add_filter('script_loader_tag', function($tag, $handle) {
+                    if ($handle === 'cig-vue-app') {
+                        return str_replace('<script ', '<script type="module" ', $tag);
+                    }
+                    return $tag;
+                }, 10, 2);
+
+                // Strip all theme/plugin styles and scripts — the Vue SPA ships its own
+                // complete design system and must not inherit WoodMart or WooCommerce CSS.
+                // Runs at PHP_INT_MAX so everything else has been queued first.
+                add_action('wp_enqueue_scripts', function() {
+                    global $wp_styles, $wp_scripts;
+
+                    // Keep admin bar + dashicons so the WP toolbar still renders for admins.
+                    $keep_styles  = ['cig-vue-app', 'admin-bar', 'dashicons'];
+                    // The Vue bundle is fully self-contained — no jQuery or other scripts needed.
+                    $keep_scripts = ['cig-vue-app'];
+
+                    foreach ($wp_styles->queue as $handle) {
+                        if (!in_array($handle, $keep_styles, true)) {
+                            wp_dequeue_style($handle);
+                        }
+                    }
+
+                    foreach ($wp_scripts->queue as $handle) {
+                        if (!in_array($handle, $keep_scripts, true)) {
+                            wp_dequeue_script($handle);
+                        }
+                    }
+                }, PHP_INT_MAX);
+            }
         }
 
         // Enqueue invoice assets
@@ -676,6 +745,15 @@ class CIG_Core {
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Shortcode [cig_vue_app] — outputs the mount point for the Vue 3 SPA.
+     *
+     * @return string
+     */
+    public function render_vue_app(): string {
+        return '<div id="app"></div>';
     }
 
     /**

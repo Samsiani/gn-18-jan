@@ -3,7 +3,7 @@
  * Plugin Name: Custom WooCommerce Invoice Generator
  * Plugin URI: https://example.com/invoice-generator
  * Description: Professional invoice generator with advanced stock reservation, real-time validation, and comprehensive analytics.
- * Version: 4.0.0
+ * Version: 4.1.0
  * Author: Samsiani
  * Author URI: https://example.com
  * Text Domain: cig
@@ -39,7 +39,7 @@ add_action('before_woocommerce_init', function() {
 /**
  * Plugin constants
  */
-define('CIG_VERSION', '4.0.0');
+define('CIG_VERSION', '4.1.0');
 define('CIG_PLUGIN_FILE', __FILE__);
 define('CIG_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CIG_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -96,6 +96,13 @@ final class CIG_Invoice_Generator {
     
     // Migrator (4.0.0)
     public $migrator;
+
+    // REST API (5.0.0)
+    public $rest_api;
+    public $rest_invoices;
+    public $rest_customers;
+    public $rest_products;
+    public $rest_dashboard;
 
     /**
      * Get singleton instance
@@ -182,8 +189,12 @@ final class CIG_Invoice_Generator {
         // Load Admin Portal
         require_once CIG_INCLUDES_DIR . 'class-cig-admin-portal.php';
 
-        // Auto-updater (PUC via Composer)
-        require_once CIG_INCLUDES_DIR . 'class-cig-updater.php';
+        // REST API (5.0.0)
+        require_once CIG_INCLUDES_DIR . 'api/class-cig-rest-api.php';
+        require_once CIG_INCLUDES_DIR . 'api/class-cig-rest-invoices.php';
+        require_once CIG_INCLUDES_DIR . 'api/class-cig-rest-customers.php';
+        require_once CIG_INCLUDES_DIR . 'api/class-cig-rest-products.php';
+        require_once CIG_INCLUDES_DIR . 'api/class-cig-rest-dashboard.php';
     }
 
     /**
@@ -253,7 +264,12 @@ final class CIG_Invoice_Generator {
         // Init Migrator (4.0.0) - handles admin notices for migration
         $this->migrator = new CIG_Migrator();
 
-        new CIG_Updater();
+        // Init REST API (5.0.0) — registers all cig/v1 endpoints on rest_api_init
+        $this->rest_api       = new CIG_Rest_API();
+        $this->rest_invoices  = new CIG_Rest_Invoices();
+        $this->rest_customers = new CIG_Rest_Customers();
+        $this->rest_products  = new CIG_Rest_Products();
+        $this->rest_dashboard = new CIG_Rest_Dashboard();
     }
 
     /**

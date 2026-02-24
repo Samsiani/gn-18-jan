@@ -18,3 +18,7 @@ vendor/theseer/
 
 # macOS
 .DS_Store
+
+# Vue SPA build artefacts (compiled output lives in root dist/)
+vue-source/node_modules/
+vue-source/dist/

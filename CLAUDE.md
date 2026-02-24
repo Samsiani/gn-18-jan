@@ -109,13 +109,17 @@ Legacy invoices are stored as `invoice` custom post type with postmeta keys pref
 5. Localises `cigGlobal` with `restUrl`, `nonce`, `isLoggedIn`, `currentUser`
 
 ### Building the SPA
-The Vue source lives in a **separate repository**: `Documents/Migration/gn-invoice-vue/`.
+The Vue source lives inside this repo at `vue-source/`.
 
 ```bash
-cd Documents/Migration/gn-invoice-vue
-npm run build          # outputs to dist/
-# then copy dist/ into this plugin repo:
-cp -R dist/ ../GIT/gn-industrial-custom-invoice-generator/dist/
+cd vue-source
+npm run build                              # outputs to vue-source/dist/
+cp -R dist/ ../dist/                      # publish to plugin root dist/
+```
+
+Or from the plugin root:
+```bash
+cd vue-source && npm run build && cp -R dist/ ../dist/
 ```
 
 **Never hand-edit files in `dist/`** — they are compiled output.
@@ -125,10 +129,131 @@ All endpoints are under `cig/v1/`. Authentication uses WP nonces (`wp_rest`).
 
 | Class | Routes |
 |-------|--------|
-| `CIG_Rest_Invoices` | `GET/POST /invoices`, `GET/PUT/DELETE /invoices/{id}` |
+| `CIG_Rest_Invoices` | `GET/POST /invoices`, `GET/PUT/DELETE /invoices/{id}`, `GET /invoices/next-number`, `POST /invoices/{id}/mark-sold` |
 | `CIG_Rest_Customers` | `GET/POST /customers`, `GET/PUT/DELETE /customers/{id}` |
 | `CIG_Rest_Products` | `GET /products` |
-| `CIG_Rest_Dashboard` | `GET /dashboard` |
+| `CIG_Rest_Dashboard` | `GET/PUT /settings/company`, `GET /dashboard`, `GET /accountant-invoices`, `PATCH /invoices/{id}/accountant-status`, `PATCH /invoices/{id}/accountant-note` |
+
+## Vue SPA Source (`vue-source/`)
+
+### Tech Stack
+- **Vue 3** (Composition API, `<script setup>`)
+- **Vite** — build tool (`npm run build`, `npm run dev`)
+- **Pinia** — state management
+- **Vue Router** — client-side routing (`src/router/index.js`)
+- No TypeScript, no external UI library
+
+### Source Structure
+```
+vue-source/src/
+  api/index.js           ← REST API wrapper — detects WP via window.cigGlobal
+  assets/css/            ← ALL styles live here; no <style> blocks in .vue files
+    variables.css        ← Design tokens, dark mode overrides
+    base.css             ← Reset, typography, print base (@page A4, 900px min-width)
+    layout.css           ← Sidebar, topbar, app shell, print layout
+    components.css       ← Buttons, cards, modals, badges, tables
+    pages.css            ← Page-specific styles + print styles
+  components/
+    layout/              ← AppSidebar, AppTopbar, SidebarOverlay
+    ui/                  ← AppModal, AppBadge, AppPagination, AppTabs, SlidePanel,
+                           ConfirmDialog, Autocomplete, CartBar, CartFAB,
+                           InvoiceActions, PaymentBadges, DateFilter,
+                           SortableHeader, SparklineChart, EmptyState,
+                           NotificationDropdown
+  composables/
+    useFormatters.js     ← formatCurrency, formatDate, generateId, debounce, …
+    useI18n.js           ← t(key, params), tLabel(obj), tWarranty(opt), locale
+    useIcons.js          ← Lucide SVG map + icon(name, size)
+    usePagination.js     ← currentPage, totalPages, paginate, resetPage
+    useSortable.js       ← sortField, sortDir, toggleSort, sortItems
+    useToast.js          ← showToast(type, title, message, duration)
+  data/index.js          ← Demo constants (COMPANY, INVOICES, …) + getInvoiceLifecycle()
+  locales/
+    en.js                ← ~280 flat dot-notation English strings (immutable base)
+    ka.js                ← ~280 Georgian translations; user overrides in localStorage
+  pages/                 ← One .vue file per route
+  stores/
+    main.js              ← invoices, customers, products, company, users; KPI methods;
+                           async init() fetches from REST in WP mode
+    auth.js              ← isLoggedIn, currentUser; WP mode inits from cigGlobal directly
+    cart.js              ← Cart state, cartToInvoiceItems
+    i18n.js              ← locale, customKa overrides, t() getter, Translation Manager
+    navigation.js        ← navigateBack, drilldownHighlight, navReturn
+    notifications.js     ← Demo notifications, markRead
+```
+
+### Routes
+| Path | Component | Access |
+|------|-----------|--------|
+| `/login` | LoginPage | Public |
+| `/dashboard` | DashboardPage | Admin only |
+| `/consultant-home` | ConsultantDashboardPage | Consultant |
+| `/invoices` | InvoiceListPage | All |
+| `/invoices/new` | InvoiceFormPage | All |
+| `/invoices/:id` | InvoiceViewPage | All |
+| `/invoices/:id/edit` | InvoiceFormPage | All |
+| `/invoices/:id/warranty` | WarrantyPage | All |
+| `/accountant` | AccountantPage | All |
+| `/statistics` | StatisticsPage | Admin only |
+| `/stock` | StockPage | All |
+| `/customers` | CustomersPage | Admin only |
+| `/settings` | SettingsPage | Admin only |
+| `/users` | UsersPage | Admin only |
+
+### WordPress vs Demo Mode
+The SPA auto-detects its environment via `window.cigGlobal` (set by `wp_localize_script()` in `class-cig-core.php`):
+
+```javascript
+// src/api/index.js
+export const isWordPress = () =>
+  typeof window !== 'undefined' && !!window.cigGlobal?.restUrl
+```
+
+| Mode | Data source | Auth |
+|------|-------------|------|
+| **Demo** (`cigGlobal` absent) | `src/data/index.js` constants | localStorage session (`gn_user_id`, `gn_logged_in`) |
+| **WordPress** (`cigGlobal` present) | REST API (`cig/v1/`) | `cigGlobal.currentUser` + `cigGlobal.isLoggedIn` injected into `auth.state()` directly — no login page |
+
+`window.cigGlobal` shape: `{ restUrl, nonce, isLoggedIn, currentUser }`.
+
+### Key Vue Conventions
+- **Icons**: always `icon(name, size)` from `useIcons.js`. Never inline SVGs.
+- **i18n**: all UI strings use `t(key, params)`. Never hardcode English in templates.
+  - `t('key', { param: value })` — interpolates `{param}` placeholders
+  - `tLabel(obj)` — for constants with `label`/`labelKa` + `i18nKey` (PAYMENT_METHODS, LIFECYCLE_LABELS, STATUS_LABELS, ITEM_STATUS_LABELS, ROLE_LABELS)
+  - `tWarranty(opt)` — WARRANTY_OPTIONS only (label=Georgian, labelEn=English)
+  - Tab arrays with translated labels must be `computed(() => [...])` so they re-render on locale switch
+- **Styling**: all CSS in `src/assets/css/`. **No `<style>` blocks in `.vue` files.**
+- **CSS variables**: `--color-*`, `--space-*`, `--text-*`, `--radius-*`, `--shadow-*`.
+- **Dark mode**: `html.dark { … }` in `variables.css`. Print always forces light mode.
+- **Responsive breakpoints**: always `@media screen and (max-width: …)`, **never** bare `@media (max-width: …)` — bare queries fire during print and break invoice A4 layout.
+- **Autocomplete**: `<Teleport to="body">` + `position:fixed`. `updatePosition()` must be called before showing list. `minChars=3` default.
+- **InvoiceActions dropdown**: singleton — `activeMenuId` module-level ref; opening any row auto-closes others.
+- **Scroll wrappers**: `overflow-x: auto; overflow-y: clip; overscroll-behavior-x: contain`. Never `overscroll-behavior-y: contain`.
+
+### Invoice Form Save Flow (WordPress mode)
+1. `recalcAndSave()` snapshots `invoice.value`, attaches `buyer: { name, taxId, phone, email, address }` from local refs.
+2. `onProductSelect()` copies `name`, `sku`, `description`, `image` from the product object — REST API filters out items with empty `name`.
+3. `mainStore.saveInvoice(data)` — POST for new invoice, PUT for existing — returns server record with assigned `{ id, number }`.
+4. `invoice.value.id` and `invoice.value.number` are updated from server response before redirect.
+5. For new invoices, the displayed number is pre-fetched from `GET /cig/v1/invoices/next-number`.
+
+### Print System
+Invoice and Warranty pages use a **body portal** technique: `printPage()` clones `.invoice-view` to `<body>` as `#invoice-print-portal`, adds `body.printing-invoice`, calls `window.print()`, then removes the clone in `onafterprint`. `#app` is hidden via CSS during print; the portal fills full A4 width. `document.title` controls the PDF filename.
+
+### Vitest Tests
+```bash
+cd vue-source
+npm test              # 23 tests, all green
+npm run test:watch
+npm run test:coverage
+```
+Files: `src/stores/__tests__/main.test.js` (9), `src/stores/__tests__/auth.test.js` (14).
+
+**Rules:**
+- `setActivePinia(createPinia())` in every `beforeEach` — never share Pinia state between tests.
+- Seed store directly (`store.invoices = [...]`); do NOT call `store.init()` (imports `@/data` side-effect).
+- `localStorage.clear()` in `beforeEach` for auth tests.
 
 ## Stock Reservation System
 
@@ -192,9 +317,9 @@ Tests use **Brain Monkey** to mock WP functions and **Mockery** to mock `$wpdb`.
 - Private methods are tested via `ReflectionMethod::setAccessible(true)` — no need to change visibility in production code.
 - When adding DB transactions to a method under test, add `$this->wpdb->shouldReceive('query')->andReturn(true)` to cover `START TRANSACTION` / `COMMIT` / `ROLLBACK` calls.
 
-### Frontend — Vitest (in the Vue SPA repo)
+### Frontend — Vitest (inside vue-source/)
 ```bash
-cd Documents/Migration/gn-invoice-vue
+cd vue-source
 npm test
 # 23 tests, all green
 ```

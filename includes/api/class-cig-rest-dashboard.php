@@ -587,8 +587,8 @@ class CIG_Rest_Dashboard {
     /**
      * GET /cig/v1/settings/company
      *
-     * Returns the full cig_settings array from wp_options, keyed in camelCase
-     * for the fields the Vue SPA needs (company info + bank details).
+     * Returns all cig_settings fields that the Vue SPA SettingsPage needs,
+     * keyed exactly as the Vue form uses them (camelCase matching @/data COMPANY shape).
      *
      * @param WP_REST_Request $request
      * @return WP_REST_Response
@@ -598,20 +598,27 @@ class CIG_Rest_Dashboard {
 
         return new WP_REST_Response( [
             'data' => [
-                // Company
-                'companyName'   => $s['company_name']   ?? '',
-                'companyTaxId'  => $s['company_tax_id'] ?? '',
-                'companyLogo'   => $s['company_logo']   ?? '',
-                'address'       => $s['address']        ?? '',
-                'phone'         => $s['phone']           ?? '',
-                'email'         => $s['email']           ?? '',
-                'website'       => $s['website']         ?? '',
-                // Bank
-                'bankName'      => $s['bank_name']      ?? '',
-                'bankAccount'   => $s['bank_account']   ?? '',
-                'bankCode'      => $s['bank_code']      ?? '',
-                // Invoice
-                'startingInvoiceNumber' => $s['starting_invoice_number'] ?? '',
+                // Company tab
+                'name'                  => $s['company_name']              ?? '',
+                'nameKa'                => $s['company_name_ka']           ?? '',
+                'taxId'                 => $s['company_tax_id']            ?? '',
+                'address'               => $s['address']                   ?? '',
+                'phone'                 => $s['phone']                     ?? '',
+                'email'                 => $s['email']                     ?? '',
+                'website'               => $s['website']                   ?? '',
+                // Bank tab
+                'bankName1'             => $s['bank1_name']                ?? '',
+                'iban1'                 => $s['bank1_account']             ?? '',
+                'bankName2'             => $s['bank2_name']                ?? '',
+                'iban2'                 => $s['bank2_account']             ?? '',
+                // Director tab
+                'directorName'          => $s['director_name']             ?? '',
+                // Config tab
+                'invoicePrefix'         => $s['invoice_prefix']            ?? 'N',
+                'startingInvoiceNumber' => $s['starting_invoice_number']   ?? '',
+                'reservationDays'       => (int) ( $s['default_reservation_days'] ?? 30 ),
+                // Login page tab
+                'loginFooterNote'       => $s['login_footer_note']         ?? '',
             ],
         ], 200 );
     }
@@ -619,8 +626,8 @@ class CIG_Rest_Dashboard {
     /**
      * PUT /cig/v1/settings/company
      *
-     * Body keys (camelCase) mirror the GET response.
-     * Only updates the fields listed here — other cig_settings keys are preserved.
+     * Body keys (camelCase) mirror the GET response exactly.
+     * Only updates the listed fields — all other cig_settings keys are preserved.
      *
      * @param WP_REST_Request $request
      * @return WP_REST_Response
@@ -630,24 +637,35 @@ class CIG_Rest_Dashboard {
 
         $existing = get_option( 'cig_settings', [] );
 
-        $allowed = [
-            'companyName'           => 'company_name',
-            'companyTaxId'          => 'company_tax_id',
-            'companyLogo'           => 'company_logo',
+        // camelCase (Vue) → snake_case (wp_options)
+        $text_fields = [
+            'name'                  => 'company_name',
+            'nameKa'                => 'company_name_ka',
+            'taxId'                 => 'company_tax_id',
             'address'               => 'address',
             'phone'                 => 'phone',
             'email'                 => 'email',
             'website'               => 'website',
-            'bankName'              => 'bank_name',
-            'bankAccount'           => 'bank_account',
-            'bankCode'              => 'bank_code',
+            'bankName1'             => 'bank1_name',
+            'iban1'                 => 'bank1_account',
+            'bankName2'             => 'bank2_name',
+            'iban2'                 => 'bank2_account',
+            'directorName'          => 'director_name',
+            'invoicePrefix'         => 'invoice_prefix',
             'startingInvoiceNumber' => 'starting_invoice_number',
+            'loginFooterNote'       => 'login_footer_note',
         ];
 
-        foreach ( $allowed as $camel => $snake ) {
+        foreach ( $text_fields as $camel => $snake ) {
             if ( array_key_exists( $camel, $body ) ) {
                 $existing[ $snake ] = sanitize_text_field( (string) $body[ $camel ] );
             }
+        }
+
+        // reservationDays is an integer
+        if ( array_key_exists( 'reservationDays', $body ) ) {
+            $days = (int) $body['reservationDays'];
+            $existing['default_reservation_days'] = max( 1, min( 90, $days ) );
         }
 
         update_option( 'cig_settings', $existing, false );

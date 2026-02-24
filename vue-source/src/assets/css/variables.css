@@ -1,0 +1,156 @@
+/* ============================================
+   GN Invoice SaaS - Design Tokens
+   ============================================ */
+
+:root {
+  /* === Primary Palette === */
+  --color-primary: #4f46e5;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #3730a3;
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-rgb: 79, 70, 229;
+
+  /* === Semantic Colors === */
+  --color-success: #16a34a;
+  --color-success-light: #22c55e;
+  --color-success-50: #f0fdf4;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-50: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-light: #f87171;
+  --color-danger-50: #fef2f2;
+  --color-info: #0ea5e9;
+  --color-info-light: #38bdf8;
+  --color-info-50: #f0f9ff;
+
+  /* === Backgrounds === */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-bg-overlay: rgba(15, 23, 42, 0.5);
+
+  /* === Borders === */
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-border-focus: #4f46e5;
+
+  /* === Text === */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-text-inverse: #ffffff;
+
+  /* === Sidebar === */
+  --color-sidebar-bg: #1e1b4b;
+  --color-sidebar-bg-hover: rgba(255, 255, 255, 0.08);
+  --color-sidebar-text: #c7d2fe;
+  --color-sidebar-text-active: #ffffff;
+  --color-sidebar-active: #4f46e5;
+  --color-sidebar-border: rgba(255, 255, 255, 0.06);
+  --color-sidebar-gradient-start: #1e1b4b;
+  --color-sidebar-gradient-end: #0f0e2a;
+
+  /* === Spacing (8px grid) === */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* === Typography === */
+  --font-family: 'FiraGO', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* === Border Radius === */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* === Shadows === */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(79, 70, 229, 0.25);
+
+  /* === Transitions === */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+
+  /* === Z-Index === */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 300;
+  --z-panel-overlay: 350;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+  --z-sidebar: 700;
+  --z-sidebar-overlay: 650;
+
+  /* === Layout === */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+  --topbar-height: 64px;
+  --content-max-width: none;
+}
+
+/* === Dark Mode Overrides === */
+html.dark {
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
+
+  --color-border: #334155;
+  --color-border-light: #1e293b;
+
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #64748b;
+
+  --color-sidebar-bg: #0c0a2a;
+  --color-sidebar-gradient-start: #0c0a2a;
+  --color-sidebar-gradient-end: #060518;
+
+  --color-primary-50: #1e1b4b;
+  --color-primary-100: #2e2a6e;
+
+  --color-success-50: #052e16;
+  --color-warning-50: #451a03;
+  --color-danger-50: #450a0a;
+  --color-info-50: #0c4a6e;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}

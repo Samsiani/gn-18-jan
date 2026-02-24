@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Custom WooCommerce Invoice Generator (CIG)** is a WordPress plugin (PHP 7.4+, WooCommerce 5.0+, WordPress 5.8+) that provides a full invoice management system for GN Industrial (gn.ge). It combines a classic PHP/AJAX backend with a Vue 3 SPA frontend.
 
-**Version:** `4.9.0` — defined in the plugin header and as `CIG_VERSION` constant in `custom-woocommerce-invoice-generator.php`. Update both places when bumping.
+**Version:** `4.9.1` — defined in the plugin header and as `CIG_VERSION` constant in `custom-woocommerce-invoice-generator.php`. Update both places when bumping.
 
 **Two distinct UIs coexist:**
 1. **Legacy PHP UI** — shortcodes (`[invoice_generator]`, `[products_stock_table]`, `[invoice_accountant_dashboard]`) rendered via WP templates, driven by jQuery + WP AJAX.
@@ -277,7 +277,7 @@ Expired entries are cleaned up by the `cig_check_expired_reservations` hourly cr
 
 | Constant | Value | Purpose |
 |----------|-------|---------|
-| `CIG_VERSION` | `'4.9.0'` | Plugin version (update in header + constant) |
+| `CIG_VERSION` | `'4.9.1'` | Plugin version (update in header + constant) |
 | `CIG_PLUGIN_DIR` | `plugin_dir_path(__FILE__)` | Absolute path to plugin root |
 | `CIG_INCLUDES_DIR` | `CIG_PLUGIN_DIR . 'includes/'` | |
 | `CIG_ASSETS_URL` | `CIG_PLUGIN_URL . 'assets/'` | Legacy assets URL |

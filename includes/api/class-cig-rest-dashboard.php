@@ -688,7 +688,7 @@ class CIG_Rest_Dashboard {
         if ( ! is_user_logged_in() ) {
             return new WP_Error( 'not_authenticated', __( 'You must be logged in.', 'cig' ), [ 'status' => 401 ] );
         }
-        if ( ! current_user_can( 'administrator' ) ) {
+        if ( ! current_user_can( 'administrator' ) && ! current_user_can( 'manage_woocommerce' ) ) {
             return new WP_Error( 'forbidden', __( 'Only administrators can modify settings.', 'cig' ), [ 'status' => 403 ] );
         }
         return true;
